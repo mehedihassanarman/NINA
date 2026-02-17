@@ -1,5 +1,4 @@
 # NINA - A Lightweight Multi-Mode LLM System for Low Resource Deployment
----
 
 NINA is a modular, offline-first AI system designed to operate efficiently on resource-constrained hardware while supporting multiple practical user workflows. The project integrates small local language models with classical computing tools and external data sources to provide a cohesive, multi-function assistant suitable for desktop applications and future web-based interfaces.
 
