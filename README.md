@@ -5,7 +5,8 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 
 ---
 
-## Core Capabilities
+
+## Core Capabilities:
 NINA provides four primary operational modes:
 ### 1️. General Assistant
 A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0.5B-Chat**) used for general queries, reasoning and conversational utilities.
@@ -61,12 +62,13 @@ A location-aware information retrieval module integrating external data APIs and
 ---
 
 
-## Technology Stack
+## Technology Stack:
 ### 1. Language Models
 * **Llama-3.2-1B-Instruct** (primary model across all modes)
 * **Qwen-1.5-0.5B-Chat** (optional alternative)
 * Both loaded in **4-bit quantization** to operate within 4 GB VRAM.
 
+##
 ### 2. Programming Environment
 * Python 3.10+
 * Libraries:
@@ -79,6 +81,7 @@ A location-aware information retrieval module integrating external data APIs and
    * requests
    * psutil
 
+##
 ### 3 External Data Sources
 * **OpenWeatherMap** – weather forecasts
 * **GNews** – news headlines
@@ -89,5 +92,5 @@ A location-aware information retrieval module integrating external data APIs and
 ---
 
 
-## 🏗 System Architecture
+## System Architecture:
 
