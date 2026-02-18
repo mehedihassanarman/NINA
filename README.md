@@ -29,7 +29,7 @@ A hybrid computation module combining model-driven reasoning with symbolic mathe
 - Safe symbolic computation via SymPy
 - Clear separation between reasoning and exact calculation
 
-
+##
 ### 3️. Translator
 A structured translation module supporting more than 20 languages.
 
@@ -39,7 +39,7 @@ A structured translation module supporting more than 20 languages.
 - Language pair selection and mid-conversation reconfiguration
 - Input length controls to maintain performance stability
 
-
+##
 ### 4️. Local Guide
 A location-aware information retrieval module integrating external data APIs and offline datasets.
 
