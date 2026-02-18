@@ -5,6 +5,53 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 
 ---
 
+## Technology Stack
+### 1. Language Models
+* Llama-3.2-1B-Instruct (primary model across all modes)
+* Qwen-1.5-0.5B-Chat (optional alternative)
+* Both loaded in 4-bit quantization to operate within 4 GB VRAM.
+
+2.2 Programming Environment
+
+* Python 3.10+
+
+* Libraries:
+
+transformers, accelerate, torch
+
+sentencepiece
+
+sympy (symbolic mathematics)
+
+requests (API calls)
+
+python-dotenv
+
+tiktoken
+
+2.3 External Data Sources
+
+OpenWeatherMap – weather forecasts
+
+GNews – news headlines
+
+Geoapify Places API – tourist attractions, supermarkets, hotels
+
+AviationStack API – flight data
+
+OpenFlights Airport Dataset – IATA code resolution
+
+2.4 Local Infrastructure
+
+GPU memory management via gpu_memory.py
+
+Airport lookup using airports.json
+
+Mode-specific system prompts stored in system_prompts.json
+
+Shared utilities in basefunctions.py
+
+---
 ## Core Capabilities
 
 NINA provides four primary operational modes:
