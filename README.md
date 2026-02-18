@@ -141,8 +141,8 @@ cd NINA
 ```
 
 ## 2. Configure API keys
-First create accounts for getting API Keys from [OpenWeather](https://openweathermap.org/api), [GNews](https://gnews.io/), [Geoapify](https://www.geoapify.com/places-api), [Aviationstack](https://aviationstack.com/)
-Then update .env file with your API Keys:
+First create accounts for getting API Keys from [OpenWeather](https://openweathermap.org/api), [GNews](https://gnews.io/), [Geoapify](https://www.geoapify.com/places-api), [Aviationstack](https://aviationstack.com/).
+Then update **.env** file with your API Keys:
 ```
 OPENWEATHER_API_KEY=
 GNEWS_API_KEY=
