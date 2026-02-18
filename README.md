@@ -47,7 +47,7 @@ A location-aware information retrieval module integrating external data APIs and
 **Capabilities include**
 - Weather information (OpenWeatherMap)
 - News summaries (GNews)
-- Tourist locations, supermarkets, and hotels (Geoapify Places)
+- Tourist locations, supermarkets and hotels (Geoapify Places)
 - Flight information (AviationStack)
 - Automatic city detection from user input
 - Intent classification for routing requests
