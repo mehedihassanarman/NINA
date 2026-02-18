@@ -131,3 +131,63 @@ Each mode maintains:
 
 This isolation ensures robustness and prevents cross-contamination between different functionalities.
 
+---
+
+## Installation:
+## 1. Clone the repository
+```
+git clone https://github.com/yourusername/LocalMind.git
+cd LocalMind
+```
+
+## 2. Configure API keys
+Update .env file with your API Keys:
+```
+OPENWEATHER_API_KEY=
+GNEWS_API_KEY=
+GEOAPIFY_API_KEY=
+AVIATIONSTACK_API_KEY=
+```
+
+## 3. Install dependencies
+```
+pip install -r requirements.txt
+```
+
+## 4. Download Model placement
+```
+python download_models.py
+```
+
+## 5. Run
+```
+python app.py
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
