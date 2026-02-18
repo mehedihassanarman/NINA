@@ -17,6 +17,7 @@ A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0
 - VRAM-aware prompt caps
 - Deterministic operation via configurable seeds and parameters
 - Safe generation safeguards
+
 ##
 ### 2️. Math Solver
 A hybrid computation module combining model-driven reasoning with symbolic mathematics.
@@ -92,4 +93,16 @@ A location-aware information retrieval module integrating external data APIs and
 
 
 ## System Architecture:
+NINA is designed as a modular multi-mode system, where each mode is an independently executed Python module:
+
+NINA/
+├── models/
+├── static/
+├── templates/
+├── basefunctions.py
+├── basefunctions.py
+├── gpu_memory.py
+├── system_prompts.json
+├── airports.json
+└── models/
 
