@@ -17,7 +17,8 @@ A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0
 - Deterministic operation via configurable seeds and parameters
 - Safe generation safeguards
 
-<br>
+• • •
+
 
 ### 2️. Math Solver
 A hybrid computation module combining model-driven reasoning with symbolic mathematics.
