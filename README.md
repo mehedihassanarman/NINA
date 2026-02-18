@@ -9,6 +9,7 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 NINA provides four primary operational modes:
 ### 1️. General Assistant
 A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0.5B-Chat**) used for general queries, reasoning and conversational utilities.
+
 **Features**
 - Local inference (CPU/GPU auto-detection)
 - Controlled context growth with history trimming
@@ -16,7 +17,7 @@ A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0
 - Deterministic operation via configurable seeds and parameters
 - Safe generation safeguards
 
-
+##
 ### 2️. Math Solver
 A hybrid computation module combining model-driven reasoning with symbolic mathematics.
 
