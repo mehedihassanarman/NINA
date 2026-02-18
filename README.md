@@ -136,8 +136,8 @@ This isolation ensures robustness and prevents cross-contamination between diffe
 ## Installation:
 ## 1. Clone the repository
 ```
-git clone https://github.com/yourusername/LocalMind.git
-cd LocalMind
+https://github.com/mehedihassanarman/NINA.git
+cd NINA
 ```
 
 ## 2. Configure API keys
@@ -154,12 +154,12 @@ AVIATIONSTACK_API_KEY=
 pip install -r requirements.txt
 ```
 
-## 4. Download Model placement
+## 4. Download models
 ```
 python download_models.py
 ```
 
-## 5. Run
+## 5. Run the app
 ```
 python app.py
 ```
