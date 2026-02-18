@@ -154,12 +154,19 @@ AVIATIONSTACK_API_KEY=
 pip install -r requirements.txt
 ```
 
-## 4. Download models
+## 4. Model access and download
 Before downloading the models, you must accept their licenses on Hugging Face:
 * [Llama-3.2-1B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct)
 * [Qwen-1.5-0.5B-Chat](https://huggingface.co/Qwen/Qwen1.5-0.5B-Chat)
+
+### Step 1: Log in to Hugging Face (CLI)
+Generate an access token from your [Hugging Face](https://huggingface.co/settings/tokens) account and run:
 ```
 hf auth login --token your_token
+```
+
+### Step 2: Download the Models
+```
 python download_models.py
 ```
 
