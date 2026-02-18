@@ -4,9 +4,9 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 <p align="center">  <img src="static/Images/Image1.jpg" width="70%"> </p>
 
 ---
+
 ## Core Capabilities
 NINA provides four primary operational modes:
-
 ### 1️. General Assistant
 A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0.5B-Chat**) used for general queries, reasoning and conversational utilities.
 
