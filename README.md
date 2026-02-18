@@ -1,20 +1,15 @@
 # NINA - A Lightweight Multi-Mode LLM System for Low Resource Deployment
 
-NINA is a modular, offline-first AI system designed to operate efficiently on resource-constrained hardware while supporting multiple practical user workflows. The project integrates small local language models with classical computing tools and external data sources to provide a cohesive, multi-function assistant suitable for desktop applications and future web-based interfaces.
-
-The system is built around a flexible mode architecture, allowing each capability to remain isolated, maintainable, and independently extendable.
+NINA is a modular, offline-first AI system designed to operate efficiently on resource-constrained hardware while supporting multiple practical user workflows. The project integrates small local language models with classical computing tools and external data sources to provide a cohesive, multi-function assistant suitable for desktop applications and future web-based interfaces. The system is built around a flexible mode architecture, allowing each capability to remain isolated, maintainable, and independently extendable.
+<p align="center">  <img src="static/Images/Image1.jpg" width="70%"> </p>
 
 ---
 
-## 🚀 Core Capabilities
 
+## Core Capabilities:
 NINA provides four primary operational modes:
-
----
-
-### 1️⃣ General Assistant
-
-A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct**) used for general queries, reasoning, and conversational utilities.
+### 1️. General Assistant
+A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0.5B-Chat**) used for general queries, reasoning and conversational utilities.
 
 **Features**
 - Local inference (CPU/GPU auto-detection)
@@ -23,10 +18,8 @@ A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct**) used for gener
 - Deterministic operation via configurable seeds and parameters
 - Safe generation safeguards
 
----
-
-### 2️⃣ Math Solver
-
+##
+### 2️. Math Solver
 A hybrid computation module combining model-driven reasoning with symbolic mathematics.
 
 **Features**
@@ -37,10 +30,8 @@ A hybrid computation module combining model-driven reasoning with symbolic mathe
 - Safe symbolic computation via SymPy
 - Clear separation between reasoning and exact calculation
 
----
-
-### 3️⃣ Translator
-
+##
+### 3️. Translator
 A structured translation module supporting more than 20 languages.
 
 **Features**
@@ -49,10 +40,8 @@ A structured translation module supporting more than 20 languages.
 - Language pair selection and mid-conversation reconfiguration
 - Input length controls to maintain performance stability
 
----
-
-### 4️⃣ Local Guide
-
+##
+### 4️. Local Guide
 A location-aware information retrieval module integrating external data APIs and offline datasets.
 
 **Capabilities include**
@@ -72,5 +61,51 @@ A location-aware information retrieval module integrating external data APIs and
 
 ---
 
-## 🏗 System Architecture
 
+## Technology Stack:
+### 1. Language Models
+* **Llama-3.2-1B-Instruct** (primary model across all modes)
+* **Qwen-1.5-0.5B-Chat** (optional alternative)
+* Both loaded in **4-bit quantization** to operate within 4 GB VRAM.
+
+##
+### 2. Programming Environment
+* Python 3.10+
+* Libraries:
+   * torch
+   * transformers
+   * bitsandbytes
+   * huggingface_hub
+   * flask
+   * python-dotenv
+   * requests
+   * psutil
+
+##
+### 3 External Data Sources
+* **OpenWeatherMap** – weather forecasts
+* **GNews** – news headlines
+* **Geoapify Places API** – tourist attractions, supermarkets, hotels
+* **AviationStack API** – flight data
+* **OpenFlights Airport Dataset** – IATA code resolution
+
+---
+
+
+## System Architecture:
+NINA is designed as a modular multi-mode system, where each mode is an independently executed Python module:
+```
+NINA/
+├── models/
+├── static/
+├── templates/
+├── basefunctions.py
+├── airports.json
+├── app.py
+├── basefunctions.py
+├── download_models.py
+├── multi_modes.py
+├── normal_mode.py
+├── requirements.txt
+└── system_prompts.json
+```
