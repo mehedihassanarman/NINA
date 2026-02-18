@@ -17,6 +17,7 @@ A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0
 - Deterministic operation via configurable seeds and parameters
 - Safe generation safeguards
 
+
 ### 2️. Math Solver
 A hybrid computation module combining model-driven reasoning with symbolic mathematics.
 
@@ -28,6 +29,7 @@ A hybrid computation module combining model-driven reasoning with symbolic mathe
 - Safe symbolic computation via SymPy
 - Clear separation between reasoning and exact calculation
 
+
 ### 3️. Translator
 A structured translation module supporting more than 20 languages.
 
@@ -36,6 +38,7 @@ A structured translation module supporting more than 20 languages.
 - Controlled output (no explanatory augmentation)
 - Language pair selection and mid-conversation reconfiguration
 - Input length controls to maintain performance stability
+
 
 ### 4️. Local Guide
 A location-aware information retrieval module integrating external data APIs and offline datasets.
