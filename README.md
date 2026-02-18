@@ -141,7 +141,8 @@ cd NINA
 ```
 
 ## 2. Configure API keys
-Update .env file with your API Keys:
+First create accounts for getting API Keys from [OpenWeather](https://openweathermap.org/api), [GNews](https://gnews.io/), [Geoapify](https://www.geoapify.com/places-api), [Aviationstack](https://aviationstack.com/)
+Then update .env file with your API Keys:
 ```
 OPENWEATHER_API_KEY=
 GNEWS_API_KEY=
@@ -165,7 +166,7 @@ Generate an access token from your [Hugging Face](https://huggingface.co/setting
 hf auth login --token your_token
 ```
 
-### Step 2: Download the Models
+### Step 2: Download the models
 ```
 python download_models.py
 ```
@@ -174,31 +175,4 @@ python download_models.py
 ```
 python app.py
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
