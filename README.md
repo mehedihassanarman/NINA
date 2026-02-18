@@ -6,6 +6,9 @@ The system is built around a flexible mode architecture, allowing each capabilit
 
 ![Image1.png](https://github.com/mehedihassanarman/NINA/blob/main/static/Images/Image1.jpg)
 
+<img src="static/Images/Image1.jpg" width="50%">
+
+
 ## 🚀 Core Capabilities
 
 NINA provides four primary operational modes:
