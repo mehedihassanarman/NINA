@@ -82,7 +82,7 @@ A location-aware information retrieval module integrating external data APIs and
    * psutil
 
 ##
-### 3 External Data Sources
+### 3. External Data Sources
 * **OpenWeatherMap** – weather forecasts
 * **GNews** – news headlines
 * **Geoapify Places API** – tourist attractions, supermarkets, hotels
@@ -109,3 +109,25 @@ NINA/
 ├── requirements.txt
 └── system_prompts.json
 ```
+
+### 1. Shared Framework
+Core features shared across all modes include:
+* GPU/CPU automatic selection
+* VRAM-aware prompt size estimation
+* Output token tracking
+* History trimming to avoid OOM errors
+* Prompt construction and system message enforcement
+* Safe fallback mechanisms during CUDA memory exhaustion
+
+##
+### 2. Mode Isolation
+
+Each mode maintains:
+* its own system prompt
+* its own input loop
+* its own inference history
+* customized input/output constraints
+* validation logic specific to its task
+
+This isolation ensures robustness and prevents cross-contamination between different functionalities.
+
