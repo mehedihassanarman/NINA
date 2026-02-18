@@ -14,14 +14,14 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 ### 2. Programming Environment
 * Python 3.10+
 * Libraries:
-   -torch
-   -transformers
-   -bitsandbytes
-   -huggingface_hub
-   -flask
-   -python-dotenv
-   -requests
-   -psutil
+   *torch
+   *transformers
+   *bitsandbytes
+   *huggingface_hub
+   *flask
+   *python-dotenv
+   *requests
+   *psutil
 
 ### 3 External Data Sources
 * OpenWeatherMap – weather forecasts
