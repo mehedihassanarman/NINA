@@ -94,15 +94,18 @@ A location-aware information retrieval module integrating external data APIs and
 
 ## System Architecture:
 NINA is designed as a modular multi-mode system, where each mode is an independently executed Python module:
-
+```
 NINA/
 ├── models/
 ├── static/
 ├── templates/
 ├── basefunctions.py
-├── basefunctions.py
-├── gpu_memory.py
-├── system_prompts.json
 ├── airports.json
-└── models/
-
+├── app.py
+├── basefunctions.py
+├── download_models.py
+├── multi_modes.py
+├── normal_mode.py
+├── requirements.txt
+└── system_prompts.json
+```
