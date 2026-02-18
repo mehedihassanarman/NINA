@@ -155,7 +155,9 @@ pip install -r requirements.txt
 ```
 
 ## 4. Download models
-Go to Hugging Face website and accept models license for [Llama-3.2-1B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct) and [Qwen-1.5-0.5B-Chat](https://huggingface.co/Qwen/Qwen1.5-0.5B-Chat)
+Before downloading the models, you must accept their licenses on Hugging Face:
+* [Llama-3.2-1B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct)
+* [Qwen-1.5-0.5B-Chat](https://huggingface.co/Qwen/Qwen1.5-0.5B-Chat)
 ```
 hf auth login --token your_token
 python download_models.py
