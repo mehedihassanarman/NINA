@@ -46,6 +46,7 @@ A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0
 
 ### 2️. Math Solver
 A hybrid computation module combining model-driven reasoning with symbolic mathematics.
+
 **Features**
 - Arithmetic and algebraic evaluation
 - Geometry and measurement problems
@@ -56,6 +57,7 @@ A hybrid computation module combining model-driven reasoning with symbolic mathe
 
 ### 3️. Translator
 A structured translation module supporting more than 20 languages.
+
 **Features**
 - Strict translation behavior enforced through system prompting
 - Controlled output (no explanatory augmentation)
@@ -64,6 +66,7 @@ A structured translation module supporting more than 20 languages.
 
 ### 4️. Local Guide
 A location-aware information retrieval module integrating external data APIs and offline datasets.
+
 **Capabilities include**
 - Weather information (OpenWeatherMap)
 - News summaries (GNews)
