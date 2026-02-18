@@ -2,6 +2,7 @@
 
 NINA is a modular, offline-first AI system designed to operate efficiently on resource-constrained hardware while supporting multiple practical user workflows. The project integrates small local language models with classical computing tools and external data sources to provide a cohesive, multi-function assistant suitable for desktop applications and future web-based interfaces. The system is built around a flexible mode architecture, allowing each capability to remain isolated, maintainable, and independently extendable.
 <p align="center">  <img src="static/Images/Image1.jpg" width="70%"> </p>
+
 ---
 
 ## Core Capabilities
