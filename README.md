@@ -11,55 +11,32 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 * Qwen-1.5-0.5B-Chat (optional alternative)
 * Both loaded in 4-bit quantization to operate within 4 GB VRAM.
 
-2.2 Programming Environment
-
+### 2. Programming Environment
 * Python 3.10+
-
 * Libraries:
+   -torch
+   -transformers
+   -bitsandbytes
+   -huggingface_hub
+   -flask
+   -python-dotenv
+   -requests
+   -psutil
 
-transformers, accelerate, torch
-
-sentencepiece
-
-sympy (symbolic mathematics)
-
-requests (API calls)
-
-python-dotenv
-
-tiktoken
-
-2.3 External Data Sources
-
-OpenWeatherMap – weather forecasts
-
-GNews – news headlines
-
-Geoapify Places API – tourist attractions, supermarkets, hotels
-
-AviationStack API – flight data
-
-OpenFlights Airport Dataset – IATA code resolution
-
-2.4 Local Infrastructure
-
-GPU memory management via gpu_memory.py
-
-Airport lookup using airports.json
-
-Mode-specific system prompts stored in system_prompts.json
-
-Shared utilities in basefunctions.py
+### 3 External Data Sources
+* OpenWeatherMap – weather forecasts
+*GNews – news headlines
+*Geoapify Places API – tourist attractions, supermarkets, hotels
+*AviationStack API – flight data
+*OpenFlights Airport Dataset – IATA code resolution
 
 ---
 ## Core Capabilities
 
 NINA provides four primary operational modes:
 
-### 1️⃣ General Assistant
-
+### 1️. General Assistant
 A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0.5B-Chat**) used for general queries, reasoning and conversational utilities.
-
 **Features**
 - Local inference (CPU/GPU auto-detection)
 - Controlled context growth with history trimming
@@ -67,12 +44,8 @@ A lightweight instruction-tuned model (**Llama-3.2-1B-Instruct** or **Qwen-1.5-0
 - Deterministic operation via configurable seeds and parameters
 - Safe generation safeguards
 
----
-
-### 2️⃣ Math Solver
-
+### 2️. Math Solver
 A hybrid computation module combining model-driven reasoning with symbolic mathematics.
-
 **Features**
 - Arithmetic and algebraic evaluation
 - Geometry and measurement problems
@@ -81,24 +54,16 @@ A hybrid computation module combining model-driven reasoning with symbolic mathe
 - Safe symbolic computation via SymPy
 - Clear separation between reasoning and exact calculation
 
----
-
-### 3️⃣ Translator
-
+### 3️. Translator
 A structured translation module supporting more than 20 languages.
-
 **Features**
 - Strict translation behavior enforced through system prompting
 - Controlled output (no explanatory augmentation)
 - Language pair selection and mid-conversation reconfiguration
 - Input length controls to maintain performance stability
 
----
-
-### 4️⃣ Local Guide
-
+### 4️. Local Guide
 A location-aware information retrieval module integrating external data APIs and offline datasets.
-
 **Capabilities include**
 - Weather information (OpenWeatherMap)
 - News summaries (GNews)
