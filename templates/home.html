@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NINA - A Multi-Purpose LLM Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <div class="app-bg">
+    <div class="chat-shell">
+
+      <header class="chat-header">
+        <div class="chat-title-area">
+          <div class="avatar-circle">N</div>
+          <div>
+            <div class="app-name">NINA</div>
+            <div class="app-subtitle" id="mode-subtitle">Normal Assistant · Ask anything</div>
+          </div>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>Online</span>
+        </div>
+      </header>
+
+      <nav class="mode-tabs">
+        <button class="mode-tab active" data-mode="assistant">Assistant</button>
+        <button class="mode-tab" data-mode="math" disabled>Math</button>
+        <button class="mode-tab" data-mode="translate" disabled>Translate</button>
+        <button class="mode-tab" data-mode="local" disabled>Local Guide</button>
+      </nav>
+
+      <section class="settings-row">
+        <div class="settings-panel" id="assistant-settings">
+
+          <div class="settings-group" id="device-group">
+            <div class="settings-label">Device</div>
+
+            <label class="radio-label">
+              <input type="radio" name="assistant-device" value="cpu"
+                {% if cfg.device == 'cpu' or not cfg.device %}checked{% endif %}>
+              CPU
+            </label>
+
+            <label class="radio-label">
+              <input type="radio" name="assistant-device" value="gpu"
+                {% if cfg.device in ['gpu','cuda'] %}checked{% endif %}>
+              GPU
+            </label>
+
+            <div class="system-usage inline">
+              <div class="sys-title">SYSTEM USAGE</div>
+
+              <div class="sys-row">
+                <div class="sys-label"> GPU </div>
+                <div class="sys-value" id="gpu-text">--%</div>
+              </div>
+              <div class="sys-bar">
+                <div class="sys-fill gpu" id="gpu-bar" style="width:0%"></div>
+              </div>
+
+              <div class="sys-row" style="margin-top:10px;">
+                <div class="sys-label"> CPU </div>
+                <div class="sys-value" id="cpu-text">--%</div>
+              </div>
+              <div class="sys-bar">
+                <div class="sys-fill cpu" id="cpu-bar" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group" id="model-group">
+            <div class="settings-label">Model</div>
+
+            <label class="radio-label">
+              <input type="radio" name="assistant-model" value="llama"
+                {% if cfg.model_key == 'llama' %}checked{% endif %}/>
+              Llama-3.2-1B
+            </label>
+
+            <label class="radio-label">
+              <input type="radio" name="assistant-model" value="qwen"
+                {% if cfg.model_key == 'qwen' %}checked{% endif %}/>
+              Qwen-0.5B
+            </label>
+          </div>
+
+          <div class="settings-group" id="sliders-group">
+
+            <div class="slider-block" id="temp-group">
+              <div class="slider-head">
+                <div class="settings-label">Creativity (temperature)</div>
+                <div class="settings-value" id="temperature-value">
+                  {{ "%.2f"|format(cfg.temperature) }}
+                </div>
+              </div>
+              <input type="range" id="assistant-temperature" min="0" max="1.5" step="0.05"
+                    value="{{ cfg.temperature }}" />
+            </div>
+
+            <div class="slider-block" id="topp-group">
+              <div class="slider-head">
+                <div class="settings-label">Top-p</div>
+                <div class="settings-value" id="top-p-value">
+                  {{ "%.2f"|format(cfg.top_p) }}
+                </div>
+              </div>
+              <input type="range" id="assistant-top-p" min="0" max="1" step="0.05"
+                    value="{{ cfg.top_p }}" />
+            </div>
+          </div>
+
+
+          <div class="settings-group" id="mid-group">
+            <div class="settings-label">Max tokens</div>
+            <select id="assistant-max-tokens">
+              {% for n in [64,128,256,512] %}
+                <option value="{{n}}" {% if cfg.max_length == n %}selected{% endif %}>{{n}}</option>
+              {% endfor %}
+            </select>
+
+            <div class="settings-label">Random seed</div>
+            <select id="assistant-seed">
+              {% for s in [0,1,42,123,1234] %}
+                <option value="{{s}}" {% if cfg.seed == s %}selected{% endif %}>{{s}}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="settings-group" id="actions-group">
+            <div class="actions-right">
+              <button class="pill-button primary" id="assistant-confirm-settings">Confirm Settings</button>
+              <button class="pill-button danger" id="assistant-clear-history">Clear History</button>              
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <main class="chat-main">
+        <div id="chat-log" class="chat-log"></div>
+      </main>
+
+      <footer class="chat-footer">
+        <div class="suggestion-row">
+          <button class="chip" data-suggest="What is photosynthesis?">Ask a question?</button>
+          <button class="chip" data-suggest="Tell me about Einstein.">Tell me about something.</button>
+          <button class="chip" data-suggest="show_chat_history()">Display entire chat history.</button>
+          <button class="chip" data-suggest="Clear 2">Clear n rounds conversation from beginning.</button>
+        </div>
+
+        <div class="input-row">
+          <div class="input-wrapper">
+            <textarea id="user-input" rows="1" placeholder="Ask me anything…"></textarea>
+            <div class="char-counter hidden" id="char-counter">0 / 256</div>
+          </div>
+          <button class="send-button" id="send-btn">➤</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <div class="dialog-backdrop hidden" id="assistant-dialog">
+    <div class="dialog">
+      <div class="dialog-title" id="assistant-dialog-title">Generation blocked</div>
+      <p id="assistant-dialog-text">
+        The model could not generate a reply. What would you like to do?
+      </p>
+      <div class="dialog-actions">
+        <button class="pill-button danger" id="dialog-clear-history">Clear history</button>
+        <button class="pill-button" id="dialog-skip-reply">Skip reply</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.__BOOT__ = {
+      cfg: {{ cfg|tojson }},
+      mode: "assistant"
+    };
+  </script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
