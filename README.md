@@ -4,33 +4,6 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 <p align="center">  <img src="static/Images/Image1.jpg" width="70%"> </p>
 
 ---
-
-## Technology Stack
-### 1. Language Models
-* Llama-3.2-1B-Instruct (primary model across all modes)
-* Qwen-1.5-0.5B-Chat (optional alternative)
-* Both loaded in 4-bit quantization to operate within 4 GB VRAM.
-
-### 2. Programming Environment
-* Python 3.10+
-* Libraries:
-   * torch
-   * transformers
-   * bitsandbytes
-   * huggingface_hub
-   * flask
-   * python-dotenv
-   * requests
-   * psutil
-
-### 3 External Data Sources
-* OpenWeatherMap – weather forecasts
-* GNews – news headlines
-* Geoapify Places API – tourist attractions, supermarkets, hotels
-* AviationStack API – flight data
-* OpenFlights Airport Dataset – IATA code resolution
-
----
 ## Core Capabilities
 NINA provides four primary operational modes:
 
@@ -83,6 +56,35 @@ A location-aware information retrieval module integrating external data APIs and
 - “Show flights from FRA to JFK.”
 
 ---
+
+
+## Technology Stack
+### 1. Language Models
+* **Llama-3.2-1B-Instruct** (primary model across all modes)
+* **Qwen-1.5-0.5B-Chat** (optional alternative)
+* Both loaded in **4-bit quantization** to operate within 4 GB VRAM.
+
+### 2. Programming Environment
+* Python 3.10+
+* Libraries:
+   * torch
+   * transformers
+   * bitsandbytes
+   * huggingface_hub
+   * flask
+   * python-dotenv
+   * requests
+   * psutil
+
+### 3 External Data Sources
+* **OpenWeatherMap** – weather forecasts
+* **GNews** – news headlines
+* **Geoapify Places API** – tourist attractions, supermarkets, hotels
+* **AviationStack API** – flight data
+* **OpenFlights Airport Dataset** – IATA code resolution
+
+---
+
 
 ## 🏗 System Architecture
 
