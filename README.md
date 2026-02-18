@@ -4,7 +4,7 @@ NINA is a modular, offline-first AI system designed to operate efficiently on re
 
 The system is built around a flexible mode architecture, allowing each capability to remain isolated, maintainable, and independently extendable.
 
----
+![Image1.png](https://github.com/mehedihassanarman/NINA/blob/main/static/Images/Image1.jpg)
 
 ## 🚀 Core Capabilities
 
