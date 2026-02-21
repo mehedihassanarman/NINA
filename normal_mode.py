@@ -171,7 +171,7 @@ def normal_chat_turn(model,tokenizer,device: str,history: Optional[List[str]],us
 
     if input_len > HARD_PROMPT_CAP:
         msg = (
-            f"⚠️ Prompt too long ({input_len} tokens > {HARD_PROMPT_CAP}). "
+            f"Prompt too long ({input_len} tokens > {HARD_PROMPT_CAP}). "
             "To avoid OOM, this response has been skipped.\n"
             "Tips: clear chat history or reduce your question length."
         )
@@ -189,7 +189,7 @@ def normal_chat_turn(model,tokenizer,device: str,history: Optional[List[str]],us
 
     if input_len + max_length > max_context:
         msg = (
-            f"⚠️ Context too long ({input_len} + {max_length} > {max_context}).\n"
+            f"Context too long ({input_len} + {max_length} > {max_context}).\n"
             "Please clear chat history or reduce the max_length."
         )
         return {
@@ -243,7 +243,7 @@ def normal_chat_turn(model,tokenizer,device: str,history: Optional[List[str]],us
                     pass
 
             msg = (
-                "⚠️ The model ran out of memory while generating this reply.\n"
+                "The model ran out of memory while generating this reply.\n"
                 "Try clearing the chat history or using a smaller max_length."
             )
             return {
