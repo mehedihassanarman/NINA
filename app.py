@@ -4,6 +4,7 @@ import os
 import subprocess
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, Optional
+import uuid
 
 import torch
 from flask import Flask, jsonify, render_template, request, session
@@ -27,44 +28,96 @@ MODEL_PATHS = {
 # -------------------------
 MODEL_CACHE: Dict[str, Dict[str, Any]] = {}  # key -> {"model":..., "tokenizer":..., "device":...}
 
+# -------------------------
+# Per-session chat state (server-side)
+# -------------------------
+# We keep only a tiny "sid" in the browser cookie.
+# All heavy data (cfg, history, pending_*) lives here in memory.
+CHAT_STATE: Dict[str, Dict[str, Any]] = {}
+
 
 @dataclass
 class ChatConfig:
     model_key: str = "llama"
-    device: str = "auto"      # ✅ NEW: auto | cpu | gpu
+    device: str = "cpu"      # auto | cpu | gpu
     max_length: int = 256
     temperature: float = 0.7
     top_p: float = 0.9
     seed: int = 42
 
 
+def get_sid() -> str:
+    """Get or create a small per-user session id stored in the cookie."""
+    sid = session.get("sid")
+    if not sid:
+        sid = uuid.uuid4().hex
+        session["sid"] = sid
+    if sid not in CHAT_STATE:
+        CHAT_STATE[sid] = {
+            "cfg": ChatConfig(),
+            "history": [],
+            "pending_user_input": None,
+            "pending_reason": None,
+            "pending_message": None,
+        }
+    return sid
 
-def get_device() -> str:
-    return "cuda" if torch.cuda.is_available() else "cpu"
+
+def get_state() -> Dict[str, Any]:
+    sid = get_sid()
+    return CHAT_STATE[sid]
 
 
 def get_config() -> ChatConfig:
-    cfg = session.get("cfg")
-    if not cfg:
-        cfg = asdict(ChatConfig())
-        session["cfg"] = cfg
-    return ChatConfig(**cfg)
+    state = get_state()
+    cfg = state.get("cfg")
+    if not isinstance(cfg, ChatConfig):
+        cfg = ChatConfig(**cfg)  # fallback if something old sneaks in
+        state["cfg"] = cfg
+    return cfg
 
 
 def set_config(cfg: ChatConfig) -> None:
-    session["cfg"] = asdict(cfg)
+    state = get_state()
+    state["cfg"] = cfg
 
 
 def get_history() -> list[str]:
-    return session.get("history", [])
+    state = get_state()
+    return state.get("history", [])
 
 
 def set_history(history: list[str]) -> None:
-    session["history"] = history
+    state = get_state()
+    state["history"] = history
 
 
 def clear_history() -> None:
-    session["history"] = []
+    state = get_state()
+    state["history"] = []
+
+
+def get_pending() -> tuple[Optional[str], Optional[str], str]:
+    state = get_state()
+    return (
+        state.get("pending_user_input"),
+        state.get("pending_reason"),
+        state.get("pending_message", ""),
+    )
+
+
+def set_pending(user_input: Optional[str], reason: Optional[str], message: str) -> None:
+    state = get_state()
+    state["pending_user_input"] = user_input
+    state["pending_reason"] = reason
+    state["pending_message"] = message
+
+
+def clear_pending() -> None:
+    state = get_state()
+    state["pending_user_input"] = None
+    state["pending_reason"] = None
+    state["pending_message"] = ""
 
 
 def resolve_device(device_pref: str) -> str:
@@ -100,13 +153,10 @@ def get_loaded_model(model_key: str, device_pref: str):
     return cached["model"], cached["tokenizer"], cached["device"]
 
 
-
 # -------------------------
 # Routes
 # -------------------------
 
-import subprocess
-import os
 
 @app.post("/api/system")
 def api_system():
@@ -142,8 +192,6 @@ def api_system():
     return jsonify(ok=True, cpu_percent=cpu_percent, gpu_percent=gpu_percent)
 
 
-
-
 @app.get("/")
 def home():
     cfg = get_config()
@@ -166,14 +214,14 @@ def home():
 def api_config():
     """
     Called when user clicks "Confirm settings".
-    If model changed => clear history and start new session (as requested).
+    If model or device changed => clear history and start new session (by design).
     """
     data = request.get_json(force=True) or {}
     old_cfg = get_config()
 
     new_cfg = ChatConfig(
         model_key=data.get("model_key", old_cfg.model_key),
-        device=data.get("device", old_cfg.device),   # ✅ NEW
+        device=data.get("device", old_cfg.device),
         max_length=int(data.get("max_length", old_cfg.max_length)),
         temperature=float(data.get("temperature", old_cfg.temperature)),
         top_p=float(data.get("top_p", old_cfg.top_p)),
@@ -194,20 +242,16 @@ def api_config():
     return jsonify(
         ok=True,
         model_changed=model_changed,
-        device_changed=device_changed,  # optional
+        device_changed=device_changed,
         cfg=asdict(new_cfg),
         history=get_history(),
     )
 
 
-
 @app.post("/api/clear")
 def api_clear():
     clear_history()
-    # clear any pending
-    session.pop("pending_user_input", None)
-    session.pop("pending_reason", None)
-    session.pop("pending_message", None)
+    clear_pending()
     return jsonify(ok=True, history=[])
 
 
@@ -217,7 +261,7 @@ def api_chat():
     Main chat endpoint.
     If backend detects context too long / prompt too long / OOM:
       - return action_required=True and show modal on UI
-      - store pending_user_input in session
+      - store pending_user_input/pending_message in server-side state
     """
     cfg = get_config()
     data = request.get_json(force=True) or {}
@@ -243,9 +287,11 @@ def api_chat():
 
     # If generation skipped for safety (prompt/context/oom), require user choice
     if out.get("skipped") and out.get("reason") in {"prompt_too_long", "context_too_long", "oom"}:
-        session["pending_user_input"] = user_input
-        session["pending_reason"] = out.get("reason")
-        session["pending_message"] = out.get("reply")
+        set_pending(
+            user_input=user_input,
+            reason=out.get("reason"),
+            message=out.get("reply", ""),
+        )
 
         return jsonify(
             ok=True,
@@ -257,6 +303,7 @@ def api_chat():
 
     # Normal path: update history stored
     set_history(out.get("history", history))
+    clear_pending()  # clean up any old pending state
     return jsonify(
         ok=True,
         action_required=False,
@@ -275,8 +322,7 @@ def api_resolve():
     data = request.get_json(force=True) or {}
     action = (data.get("action") or "").strip().lower()
 
-    pending_user_input: Optional[str] = session.get("pending_user_input")
-    pending_message: str = session.get("pending_message", "")
+    pending_user_input, pending_reason, pending_message = get_pending()
 
     # no pending => nothing to do
     if not pending_user_input:
@@ -286,10 +332,7 @@ def api_resolve():
 
     if action == "skip":
         # discard pending, return the warning message as a one-off assistant bubble
-        session.pop("pending_user_input", None)
-        session.pop("pending_reason", None)
-        session.pop("pending_message", None)
-
+        clear_pending()
         return jsonify(
             ok=True,
             action_required=False,
@@ -316,9 +359,7 @@ def api_resolve():
             seed=cfg.seed,
         )
 
-        session.pop("pending_user_input", None)
-        session.pop("pending_reason", None)
-        session.pop("pending_message", None)
+        clear_pending()
 
         # If STILL skipped (rare), just return message
         if out.get("skipped"):
