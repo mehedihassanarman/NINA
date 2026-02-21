@@ -34,7 +34,7 @@ A hybrid computation module combining model-driven reasoning with symbolic mathe
 
 ##
 ### 3️. Translator
-A structured translation module supporting more than 20 languages.
+A structured translation module supporting more than 10 languages.
 
 **Features**
 - Strict translation behavior enforced through system prompting
@@ -72,7 +72,7 @@ A location-aware information retrieval module integrating external data APIs and
 
 ##
 ### 2. Programming Environment
-* Python 3.10+
+* Python 3.11.9
 * Libraries:
    * torch
    * transformers
@@ -140,6 +140,10 @@ This isolation ensures robustness and prevents cross-contamination between diffe
 ```
 https://github.com/mehedihassanarman/NINA.git
 cd NINA
+py -3.11 -m venv .venv
+.venv/Scripts/activate
+pip install torch transformers bitsandbytes accelerate huggingface_hub
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ## 2. Configure API keys
