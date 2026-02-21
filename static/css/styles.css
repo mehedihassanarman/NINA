@@ -17,9 +17,9 @@ body {
 .chat-shell {
   width: 700px;
   height: 1000px;
-  background: rgba(6, 10, 20, 0.96);
+  background: rgba(65, 83, 74, 0.96);
   border-radius: 24px;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 18px 60px rgba(63, 150, 117, 0.8);
   display: flex;
   flex-direction: column;
   padding: 18px 20px;
@@ -399,6 +399,17 @@ body {
   gap: 8px;
   margin-top: 12px;
 }
+
+
+/* Bigger buttons only inside the "Generation blocked" dialog */
+.dialog-actions .pill-button {
+  width: 140px;         /* increase width */
+  height: 36px;         /* a bit taller than default */
+  margin-bottom: 0;     /* remove global bottom margin inside the row */
+  font-size: 13px;
+}
+
+
 
 .hidden { display: none !important; }
 
