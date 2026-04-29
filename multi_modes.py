@@ -196,7 +196,7 @@ def math_mode(model, tokenizer, device: str, history: Optional[List[str]], user_
 
     if input_len > HARD_PROMPT_CAP:
         msg = (
-            f"⚠️ Prompt too long ({input_len} tokens > {HARD_PROMPT_CAP}).\n"
+            f" Prompt too long ({input_len} tokens > {HARD_PROMPT_CAP}).\n"
             "To avoid OOM, this response has been skipped.\n"
             "Tips: shorten your question or clear the chat history."
         )
@@ -219,7 +219,7 @@ def math_mode(model, tokenizer, device: str, history: Optional[List[str]], user_
 
     if max_new_tokens <= 0 or (input_len + max_new_tokens > max_context):
         msg = (
-            "⚠️ The question + history are too long for the model's context window.\n"
+            " The question + history are too long for the model's context window.\n"
             "Please clear some history or shorten the question."
         )
         if history:
@@ -273,7 +273,7 @@ def math_mode(model, tokenizer, device: str, history: Optional[List[str]], user_
                 except Exception:
                     pass
             msg = (
-                "⚠️ The model ran out of memory while solving this problem.\n"
+                " The model ran out of memory while solving this problem.\n"
                 "Try clearing history or asking a smaller sub-problem."
             )
             return {
@@ -346,7 +346,7 @@ def translator_mode(model, tokenizer, device: str, history: Optional[List[str]],
     # Character limit from original translator code
     if len(raw_user_input) > 512:
         msg = (
-            f"⚠️ Your input is {len(raw_user_input)} characters long.\n"
+            f" Your input is {len(raw_user_input)} characters long.\n"
             "Maximum allowed is 512 characters.\n"
             "Please shorten your text and try again."
         )
@@ -377,7 +377,7 @@ def translator_mode(model, tokenizer, device: str, history: Optional[List[str]],
 
     if input_len > HARD_PROMPT_CAP:
         msg = (
-            f"⚠️ Prompt too long ({input_len} tokens > {HARD_PROMPT_CAP}).\n"
+            f" Prompt too long ({input_len} tokens > {HARD_PROMPT_CAP}).\n"
             "To avoid OOM, this translation has been skipped.\n"
             "Tips: shorten your text or clear the history."
         )
@@ -401,7 +401,7 @@ def translator_mode(model, tokenizer, device: str, history: Optional[List[str]],
 
     if max_new_tokens <= 0 or (input_len + max_new_tokens > max_context):
         msg = (
-            "⚠️ Your text + history are too long for the model's context window.\n"
+            " Your text + history are too long for the model's context window.\n"
             "Please clear history or shorten the text."
         )
         # Trim some rounds to help future turns, then skip this one
@@ -455,7 +455,7 @@ def translator_mode(model, tokenizer, device: str, history: Optional[List[str]],
                 except Exception:
                     pass
             msg = (
-                "⚠️ The model ran out of memory while translating.\n"
+                " The model ran out of memory while translating.\n"
                 "Try clearing history or sending a shorter text."
             )
             return {
@@ -1064,7 +1064,7 @@ def guide_mode( model, tokenizer, device: str, history: Optional[List[str]], use
 
     if input_len > HARD_PROMPT_CAP:
         msg = (
-            f"⚠️ This conversation is too long for the model.\n"
+            f" This conversation is too long for the model.\n"
             f"- Input tokens: {input_len}\n"
             f"- Max context:  {max_context}\n\n"
             "Please clear chat history or shorten your message."
@@ -1091,7 +1091,7 @@ def guide_mode( model, tokenizer, device: str, history: Optional[List[str]], use
 
     if max_new_tokens <= 0 or (input_len + max_new_tokens > max_context):
         msg = (
-            "⚠️ Not enough remaining context to generate a reply.\n"
+            " Not enough remaining context to generate a reply.\n"
             "Please clear some history or shorten your message."
         )
 
@@ -1147,7 +1147,7 @@ def guide_mode( model, tokenizer, device: str, history: Optional[List[str]], use
                 except Exception:
                     pass
             msg = (
-                "⚠️ The model ran out of memory while answering.\n"
+                " The model ran out of memory while answering.\n"
                 "Try clearing history or sending a shorter message."
             )
             return {
