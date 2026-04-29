@@ -11,7 +11,7 @@ import torch
 from basefunctions import load_model_and_tokenizer, set_seed, print_gpu_memory, is_oom_error, build_chat_prompt, print_status, print_gpu_info
 
 ASSISTANT_SYSTEM_PROMPT = "You are a helpful, concise assistant."
-HARD_PROMPT_CAP = 3500
+HARD_PROMPT_CAP = 3000
 
 
 # =====================================================================
