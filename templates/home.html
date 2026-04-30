@@ -25,8 +25,8 @@
 
       <nav class="mode-tabs">
         <button class="mode-tab active" data-mode="assistant">Assistant</button>
-        <button class="mode-tab" data-mode="math" disabled>Math</button>
-        <button class="mode-tab" data-mode="translate" disabled>Translate</button>
+        <button class="mode-tab" data-mode="math">Math</button>
+        <button class="mode-tab" data-mode="translate">Translate</button>
         <button class="mode-tab" data-mode="local" disabled>Local Guide</button>
       </nav>
 
@@ -86,7 +86,6 @@
           </div>
 
           <div class="settings-group" id="sliders-group">
-
             <div class="slider-block" id="temp-group">
               <div class="slider-head">
                 <div class="settings-label">Creativity (temperature)</div>
@@ -110,7 +109,6 @@
             </div>
           </div>
 
-
           <div class="settings-group" id="mid-group">
             <div class="settings-label">Max tokens</div>
             <select id="assistant-max-tokens">
@@ -125,12 +123,32 @@
                 <option value="{{s}}" {% if cfg.seed == s %}selected{% endif %}>{{s}}</option>
               {% endfor %}
             </select>
+
+            <div class="translate-controls" id="translate-controls">
+              <div class="settings-label">Source</div>
+              <select id="translate-source">
+                {% for lang in supported_languages %}
+                  <option value="{{ lang }}" {% if lang == "English" %}selected{% endif %}>{{ lang }}</option>
+                {% endfor %}
+              </select>
+
+              <button type="button" class="swap-button" id="translate-swap">⇄ Swap</button>
+
+              <div class="settings-label">Target</div>
+              <select id="translate-target">
+                {% for lang in supported_languages %}
+                  <option value="{{ lang }}" {% if lang == "German" %}selected{% endif %}>{{ lang }}</option>
+                {% endfor %}
+              </select>
+
+              <div class="translate-direction" id="translate-direction">English → German</div>
+            </div>
           </div>
 
           <div class="settings-group" id="actions-group">
             <div class="actions-right">
               <button class="pill-button primary" id="assistant-confirm-settings">Confirm Settings</button>
-              <button class="pill-button danger" id="assistant-clear-history">Clear History</button>              
+              <button class="pill-button danger" id="assistant-clear-history">Clear History</button>
             </div>
           </div>
 
@@ -147,12 +165,14 @@
           <button class="chip" data-suggest="Tell me about Einstein.">Tell me about something.</button>
           <button class="chip" data-suggest="show_chat_history()">Display entire chat history.</button>
           <button class="chip" data-suggest="Clear 2">Clear n rounds conversation from beginning.</button>
+          <button class="chip hidden" data-suggest="">Extra 1</button>
+          <button class="chip hidden" data-suggest="">Extra 2</button>
         </div>
 
         <div class="input-row">
           <div class="input-wrapper">
             <textarea id="user-input" rows="1" placeholder="Ask me anything…"></textarea>
-            <div class="char-counter hidden" id="char-counter">0 / 256</div>
+            <div class="char-counter hidden" id="char-counter">0 / 512</div>
           </div>
           <button class="send-button" id="send-btn">➤</button>
         </div>
@@ -168,7 +188,7 @@
       </p>
       <div class="dialog-actions">
         <button class="pill-button danger" id="dialog-clear-history">Clear History</button>
-        <button class="pill-button" id="dialog-skip-reply">Skip reply</button>
+        <button class="pill-button" id="dialog-skip-reply">Skip Reply</button>
       </div>
     </div>
   </div>
@@ -176,7 +196,8 @@
   <script>
     window.__BOOT__ = {
       cfg: {{ cfg|tojson }},
-      mode: "assistant"
+      mode: "assistant",
+      supported_languages: {{ supported_languages|tojson }}
     };
   </script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
