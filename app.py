@@ -11,11 +11,11 @@ from flask import Flask, jsonify, render_template, request, session
 
 # IMPORTANT: file name must match your module
 from normal_mode import normal_mode_load_model, normal_chat_turn
-from multi_modes_mini import get_device as mm_get_device, load_llama_model as mm_load_llama_model, math_mode, translator_mode, SUPPORTED_LANGUAGES
+from multi_modes_mini import get_device as mm_get_device, load_llama_model as mm_load_llama_model, math_mode, translator_mode, SUPPORTED_LANGUAGES, guide_mode, load_airports,AIRPORTS,fetch_flights
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-me")
-
+load_airports()
 # -------------------------
 # Models available in UI
 # -------------------------
@@ -59,6 +59,8 @@ def get_sid() -> str:
             "history": [],          # assistant history
             "math_history": [],      # math mode history
             "translate_history": [], # translator mode history
+            "guide_history": [], # local guide mode history
+            "guide_current_city": None,
             "pending_user_input": None,
             "pending_reason": None,
             "pending_message": None,
@@ -151,6 +153,31 @@ def clear_translate_history() -> None:
     state["translate_history"] = []
 
 
+def get_guide_history() -> list[str]:
+    state = get_state()
+    return state.get("guide_history", [])
+
+
+def set_guide_history(history: list[str]) -> None:
+    state = get_state()
+    state["guide_history"] = history
+
+
+def clear_guide_history() -> None:
+    state = get_state()
+    state["guide_history"] = []
+
+
+def get_guide_current_city() -> Optional[str]:
+    state = get_state()
+    return state.get("guide_current_city")
+
+
+def set_guide_current_city(city: Optional[str]) -> None:
+    state = get_state()
+    state["guide_current_city"] = city
+
+
 
 
 def resolve_device(device_pref: str) -> str:
@@ -191,12 +218,6 @@ MATH_MODEL = None
 MATH_TOKENIZER = None
 MATH_DEVICE = None
 
-# Separate LLaMA for translator
-TRANSLATE_MODEL = None
-TRANSLATE_TOKENIZER = None
-TRANSLATE_DEVICE = None
-
-
 def get_math_model():
     global MATH_MODEL, MATH_TOKENIZER, MATH_DEVICE
     if MATH_MODEL is None or MATH_TOKENIZER is None or MATH_DEVICE is None:
@@ -205,12 +226,33 @@ def get_math_model():
     return MATH_MODEL, MATH_TOKENIZER, MATH_DEVICE
 
 
+# Separate LLaMA for translator
+TRANSLATE_MODEL = None
+TRANSLATE_TOKENIZER = None
+TRANSLATE_DEVICE = None
+
+
+
 def get_translate_model():
     global TRANSLATE_MODEL, TRANSLATE_TOKENIZER, TRANSLATE_DEVICE
     if TRANSLATE_MODEL is None or TRANSLATE_TOKENIZER is None or TRANSLATE_DEVICE is None:
         TRANSLATE_DEVICE = mm_get_device()
         TRANSLATE_MODEL, TRANSLATE_TOKENIZER = mm_load_llama_model(TRANSLATE_DEVICE)
     return TRANSLATE_MODEL, TRANSLATE_TOKENIZER, TRANSLATE_DEVICE
+
+
+GUIDE_MODEL = None
+GUIDE_TOKENIZER = None
+GUIDE_DEVICE = None
+
+
+def get_guide_model():
+    global GUIDE_MODEL, GUIDE_TOKENIZER, GUIDE_DEVICE
+    if GUIDE_MODEL is None or GUIDE_TOKENIZER is None or GUIDE_DEVICE is None:
+        GUIDE_DEVICE = mm_get_device()
+        GUIDE_MODEL, GUIDE_TOKENIZER = mm_load_llama_model(GUIDE_DEVICE)
+    return GUIDE_MODEL, GUIDE_TOKENIZER, GUIDE_DEVICE
+
 
 # -------------------------
 # Routes
@@ -261,12 +303,22 @@ def home():
     except Exception:
         online = False
 
+    sorted_airports = sorted(
+        AIRPORTS,
+        key=lambda a: (
+            (a.get("iata") or "").upper(),
+            (a.get("name") or "").lower(),
+        ),
+    )
+
+
     return render_template(
         "home.html",
         cfg=asdict(cfg),
         online=online,
         mode="Assistant",
         supported_languages=SUPPORTED_LANGUAGES,
+        airports=sorted_airports,
     )
 
 
@@ -336,6 +388,11 @@ def api_clear_mode():
     if mode == "translate":
         clear_translate_history()
         return jsonify(ok=True, mode="translate")
+    
+    if mode == "local":
+        clear_guide_history()
+        set_guide_current_city(None)
+        return jsonify(ok=True, mode="local")
 
     return jsonify(ok=False, error=f"Unsupported mode: {mode}"), 400
 
@@ -565,8 +622,61 @@ def api_translate():
     )
 
 
+# Local Guide mode
 
+@app.post("/api/guide")
+def api_guide():
+    data = request.get_json(force=True) or {}
+    user_input = (data.get("message") or "").strip()
 
+    if not user_input:
+        return jsonify(ok=True, reply="", history=get_guide_history())
+
+    history = get_guide_history()
+    current_city = get_guide_current_city()
+
+    model, tokenizer, device = get_guide_model()
+
+    out = guide_mode(
+        model=model,
+        tokenizer=tokenizer,
+        device=device,
+        history=history,
+        user_input=user_input,
+        current_city=current_city,
+    )
+
+    set_guide_history(out.get("history", history))
+    set_guide_current_city(out.get("current_city", current_city))
+
+    reason = out.get("reason")
+    if reason in {"no_space_for_generation", "prompt_too_long"}:
+        return jsonify(
+            ok=True,
+            action_required=True,
+            message=out.get("reply", "Local guide response could not be generated."),
+            reason=reason,
+            history=out.get("history", history),
+        )
+
+    return jsonify(
+        ok=True,
+        reply=out.get("reply", ""),
+        history=out.get("history", history),
+        skipped=out.get("skipped", False),
+        reason=reason,
+        current_city=out.get("current_city"),
+        intent=out.get("intent"),
+    )
+
+@app.post("/api/flights")
+def api_flights():
+    data = request.get_json(force=True) or {}
+    origin = (data.get("origin") or "").strip()
+    destination = (data.get("destination") or "").strip()
+
+    reply = fetch_flights(origin, destination)
+    return jsonify(ok=True, reply=reply)
 
 
 if __name__ == "__main__":
