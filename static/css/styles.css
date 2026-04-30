@@ -463,3 +463,141 @@ body {
 .sys-fill.gpu { background: #facc15; }
 .sys-fill.cpu { background: #facc15; }
 
+
+/* =======================================
+   Math Mode – Cleanup UI
+   ======================================= */
+
+/* ==========================
+   Math mode UI simplification
+   ========================== */
+
+/* Hide DEVICE label */
+body.math-mode #device-group .settings-label {
+    display: none;
+}
+
+/* Hide CPU & GPU radio buttons */
+body.math-mode #device-group .radio-label {
+    display: none;
+}
+
+/* Hide model + temp + top-p + max tokens + seed */
+body.math-mode #model-group,
+body.math-mode #temp-group,
+body.math-mode #topp-group,
+body.math-mode #mid-group,
+body.math-mode #assistant-confirm-settings {
+    display: none;
+}
+
+/* (optional layout tweaks below, keep whatever you already have) */
+
+/* Improve spacing when radio buttons + DEVICE are removed */
+body.math-mode #device-group {
+    padding-top: 8px;     /* reduce top spacing */
+    margin-top: -10px;    /* pull system usage upward */
+}
+
+/* System Usage subtitle alignment fix */
+body.math-mode #device-group .system-usage-title {
+    margin-top: 0;
+}
+
+/* Ensure system usage bars take full width */
+body.math-mode #device-group .system-usage {
+    width: 100%;
+}
+
+/* Align Clear History button nicely */
+body.math-mode #actions-group {
+    display: flex;
+    justify-content: flex-end; /* push to right side */
+    margin-top: 0px;
+}
+
+
+/* =========================
+   Translate Mode
+   ========================= */
+
+/* Hide assistant-only controls in translator mode */
+body.translate-mode #device-group .settings-label,
+body.translate-mode #device-group .radio-label,
+body.translate-mode #model-group,
+body.translate-mode #sliders-group,
+body.translate-mode #assistant-confirm-settings,
+body.translate-mode #assistant-max-tokens,
+body.translate-mode #assistant-seed,
+body.translate-mode #mid-group > .settings-label:first-child,
+body.translate-mode #mid-group > .settings-label:nth-of-type(2) {
+  display: none;
+}
+
+/* Keep only system usage visible and align translator layout cleanly */
+body.translate-mode #device-group {
+  padding-top: 8px;
+  margin-top: -10px;
+}
+
+body.translate-mode #mid-group {
+  margin-top: 0 !important;
+  align-content: start;
+}
+
+/* Translator controls */
+body.translate-mode #translate-controls {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+body.translate-mode #translate-controls .settings-label {
+  margin: 0;
+  line-height: 1.2;
+}
+
+body.translate-mode #translate-source,
+body.translate-mode #translate-target {
+  display: block;
+  width: 100%;
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid #4f46e5;
+}
+
+/* Swap button */
+body.translate-mode .swap-button {
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  background: #4f46e5;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+body.translate-mode .swap-button:hover {
+  background: #6366f1;
+}
+
+/* Direction line */
+body.translate-mode .translate-direction {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #93c5fd;
+}
+
+/* Extra spacing before Clear History only in translator mode */
+body.translate-mode #assistant-clear-history {
+  margin-top: 80px;
+}
+
+/* Red warning after 256 chars */
+.char-counter.warning {
+  color: #ef4444;
+  font-weight: 600;
+}
