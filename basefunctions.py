@@ -1,25 +1,11 @@
-# basefunctions.py
-
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
+DEFAULT_MAX_CONTEXT = 131072 # For "Llama-3.2-1B-Instruct" model
 
-# ---------- Model loading / device utilities ----------
 
-def load_model_and_tokenizer(
-    model_path: str,
-    device: str,
-    trust_remote_code: bool = False,
-    quantize_4bit_if_cuda: bool = True,
-):
-    """
-    Load a causal LM + tokenizer from a local directory.
-
-    - model_path: local folder with the model
-    - device: "cuda" or "cpu"
-    - trust_remote_code: pass through to HF transformers
-    - quantize_4bit_if_cuda: if True, use 4-bit quantization on GPU
-    """
+# Load model and device utilities 
+def load_model_and_tokenizer( model_path: str, device: str, trust_remote_code: bool = False, quantize_4bit_if_cuda: bool = True ):
     print(f"\n[INFO] Loading model from LOCAL DIRECTORY: {model_path}\n")
 
     try:
@@ -29,11 +15,11 @@ def load_model_and_tokenizer(
             local_files_only=True,
         )
     except Exception:
-        print("\n❌ ERROR: Model tokenizer not found offline!")
+        print("\nERROR: Model tokenizer not found offline!")
         print(f"Make sure folder exists: {model_path}")
         raise
 
-    # GPU → 4-bit quantization (optional)
+    # GPU Mode: 4-bit quantization 
     if device == "cuda" and quantize_4bit_if_cuda:
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -50,12 +36,13 @@ def load_model_and_tokenizer(
                 local_files_only=True,
             )
         except Exception:
-            print("\n❌ ERROR: Model weights not found offline!")
+            print("\nERROR: Model weights not found offline!")
             raise
 
         print("[INFO] Model loaded locally in 4-bit on GPU!\n")
 
-    else:  # CPU or non-quantized GPU
+    # CPU Mode
+    else:  
         try:
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
@@ -64,7 +51,7 @@ def load_model_and_tokenizer(
                 local_files_only=True,
             )
         except Exception:
-            print("\n❌ ERROR: Model weights not found offline!")
+            print("\nERROR: Model weights not found offline!")
             raise
 
         model.to(device)
@@ -73,13 +60,16 @@ def load_model_and_tokenizer(
     return model, tokenizer
 
 
+# Set random seed for reproducibility.
 def set_seed(seed: int, device: str):
     torch.manual_seed(seed)
+
     if device == "cuda":
         torch.cuda.manual_seed_all(seed)
     print(f"[INFO] Random seed set to {seed}")
 
 
+# Print current allocated and reserved GPU memory.
 def print_gpu_memory():
     if torch.cuda.is_available():
         allocated = torch.cuda.memory_allocated() / 1e6
@@ -87,42 +77,42 @@ def print_gpu_memory():
         print(f"[GPU Memory] Allocated: {allocated:.1f} MB | Reserved: {reserved:.1f} MB")
 
 
+# Out of memory (OOM)
 def is_oom_error(e: Exception) -> bool:
     if isinstance(e, torch.cuda.OutOfMemoryError):
         return True
+    
     msg = str(e).lower()
     return "out of memory" in msg or "cuda error: out of memory"
 
 
+# Read the maximum context size from model config. Falls back to 2048 if unavailable.
 def get_max_context(model) -> int:
     return getattr(model.config, "max_position_embeddings", 2048)
 
 
-# ---------- Prompt construction ----------
-
+# Prompt construction 
 def build_chat_prompt(history, user_input: str, tokenizer, system_prompt: str | None = None) -> str:
-    """
-    Generic prompt builder for all modes.
-    Uses chat template if available, otherwise falls back to plain text.
-    """
-    # Chat-template capable model (Qwen, some Llama variants)
+
+    # Preferred path: tokenizer-provided chat template
     if hasattr(tokenizer, "apply_chat_template"):
         messages = []
 
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
 
-        # Add conversation history
+        # Convert stored history into chat-template messages
         for i in range(0, len(history), 2):
             user_msg = history[i].replace("User:", "").strip()
             asst_msg = history[i + 1].replace("Assistant:", "").strip()
 
             if user_msg:
                 messages.append({"role": "user", "content": user_msg})
+
             if asst_msg:
                 messages.append({"role": "assistant", "content": asst_msg})
 
-        # Latest user input
+        # Add latest user input
         messages.append({"role": "user", "content": user_input})
 
         return tokenizer.apply_chat_template(
@@ -131,14 +121,13 @@ def build_chat_prompt(history, user_input: str, tokenizer, system_prompt: str | 
             add_generation_prompt=True,
         )
 
-    # Plain text fallback (standard Llama format)
+    # Fallback path: plain text prompt
     system_part = f"System: {system_prompt}\n" if system_prompt else ""
     conv = "\n".join(history + [f"User: {user_input}", "Assistant:"])
     return system_part + conv
 
 
-# ----- Status / history utilities (CLI only) -----
-
+# Print a formatted status line for prompt/generation statistics.
 def print_status(input_len, max_length, history, max_context, device, generated_tokens=None, minimal=False):
     # Count user turns
     user_messages = (len(history) + 1) // 2
@@ -169,6 +158,7 @@ def print_status(input_len, max_length, history, max_context, device, generated_
     print("")
 
 
+# Print the conversation history.
 def show_history(history):
     if not history:
         print("****** Conversation History (0 turns) ******")
@@ -187,28 +177,28 @@ def show_history(history):
 
     print("****** End of Conversation History ******\n")
 
-    # ============================================================
-#                PROMPT CAP LOGIC (from prompt_cap)
-# ============================================================
 
-DEFAULT_MAX_CONTEXT = 131072 # For "Llama-3.2-1B-Instruct" model
-
-
+# Normalize device string into 'cuda' or 'cpu'.
 def _infer_device(device: str | None) -> str:
     if device is None:
         return "cuda" if torch.cuda.is_available() else "cpu"
+    
     device = device.lower()
+
     if device.startswith("cuda"):
         return "cuda"
     return "cpu"
 
 
+# Normalize max_context.
 def _infer_max_context(max_context: int | None) -> int:
     if max_context is None or max_context <= 0:
         return DEFAULT_MAX_CONTEXT
+    
     return max_context
 
 
+# Print detailed GPU information for debugging.
 def print_gpu_info():
     if not torch.cuda.is_available():
         print("No GPU available. Using CPU.")
@@ -216,7 +206,6 @@ def print_gpu_info():
 
     device = torch.cuda.current_device()
     props = torch.cuda.get_device_properties(device)
-
     total = props.total_memory / (1024 ** 3)
     allocated = torch.cuda.memory_allocated(device) / (1024 ** 3)
     reserved = torch.cuda.memory_reserved(device) / (1024 ** 3)
@@ -228,15 +217,11 @@ def print_gpu_info():
     print(f"Reserved: {reserved:.2f} GB")
     print(f"Free (approx): {free:.2f} GB")
 
-#print_gpu_info()
 
-
-def compute_hard_prompt_cap(device: str | None = None,
-                            max_context: int | None = None) -> int:
-
+# Compute a conservative hard prompt cap to reduce OOM risk.
+def compute_hard_prompt_cap(device: str | None = None, max_context: int | None = None) -> int:
     device = _infer_device(device)
     max_context = _infer_max_context(max_context)
-
     cap = min(2500, max_context // 2)
 
     if device == "cuda" and torch.cuda.is_available():
@@ -267,7 +252,3 @@ def compute_hard_prompt_cap(device: str | None = None,
 
     print(f"[INFO] HARD_PROMPT_CAP computed as {cap} tokens (device={device}, max_context={max_context}).")
     return cap
-
-
-# Global default
-#HARD_PROMPT_CAP = compute_hard_prompt_cap()
