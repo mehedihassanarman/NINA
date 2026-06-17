@@ -1,4 +1,4 @@
-/* Background */
+/* Base Page */
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
@@ -13,10 +13,12 @@ body {
   justify-content: center;
 }
 
-/* Chat shell */
+/* Main App Shell */
 .chat-shell {
-  width: 700px;
-  height: 1000px;
+  width: min(700px, 95vw);
+  height: 95vh;
+  max-height: 1500px;
+  min-height: 500px;
   background: rgba(65, 83, 74, 0.96);
   border-radius: 24px;
   box-shadow: 0 18px 60px rgba(63, 150, 117, 0.8);
@@ -51,7 +53,9 @@ body {
   font-weight: 600;
 }
 
-.app-name { font-weight: 600; }
+.app-name {
+  font-weight: 600;
+}
 
 .app-subtitle {
   font-size: 12px;
@@ -73,7 +77,7 @@ body {
   background: #22c55e;
 }
 
-/* Tabs */
+/* Mode Tabs */
 .mode-tabs {
   display: flex;
   gap: 8px;
@@ -96,7 +100,7 @@ body {
   color: #e5e7ff;
 }
 
-/* Settings container */
+/* Settings Panel */
 .settings-row {
   padding: 8px 10px;
   border-radius: 14px;
@@ -104,17 +108,16 @@ body {
   margin-bottom: 12px;
 }
 
-/* ✅ IMPORTANT: single grid layout (reference image) */
-/* 3 equal columns */
-#assistant-settings.settings-panel{
+/* Main grid layout for the settings area */
+#assistant-settings.settings-panel {
   display: grid;
   width: 100%;
   max-width: 100%;
-  column-gap: 18px;   /* keep spacing between columns */
-  row-gap: 6px;       /* ✅ reduce vertical spacing between Model and Max Tokens */
+  column-gap: 18px;
+  row-gap: 6px;
   align-items: start;
 
-  grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: auto auto;
 
   grid-template-areas:
@@ -122,35 +125,32 @@ body {
     "device mid   actions";
 }
 
-/* areas */
-#device-group{ grid-area: device; }
-#model-group{ grid-area: model; }
-#sliders-group{ grid-area: sliders; }
-#mid-group{ grid-area: mid; }
-#actions-group{ grid-area: actions; }
+/* Grid area assignments */
+#device-group { grid-area: device; }
+#model-group { grid-area: model; }
+#sliders-group { grid-area: sliders; }
+#mid-group { grid-area: mid; }
+#actions-group { grid-area: actions; }
 
-/* Prevent overflow only where needed (don’t shrink labels/radio rows) */
-#assistant-settings.settings-panel .settings-group{ min-width: 0; }
+/* Prevent overflow in grouped controls */
+#assistant-settings.settings-panel .settings-group {
+  min-width: 0;
+}
 
+/* Keep controls full width inside settings panel */
 #assistant-settings.settings-panel input[type="range"],
-#assistant-settings.settings-panel select{
+#assistant-settings.settings-panel select,
+#assistant-settings.settings-panel input[type="text"] {
   width: 100%;
   max-width: 100%;
 }
 
-#assistant-settings.settings-panel button{
+#assistant-settings.settings-panel button {
   width: 100%;
 }
 
-/* Add space below Top-P slider section */
-#topp-group {
-  margin-bottom: 22px;
-}
-
-
-
-/* ✅ Make mid-group align like a clean form column */
-#mid-group{
+/* Mid column layout */
+#mid-group {
   margin-top: -20px;
   display: grid;
   grid-template-columns: 1fr;
@@ -158,30 +158,33 @@ body {
   align-content: start;
 }
 
-#mid-group .settings-label{
-  margin-top: 0 !important; /* overrides inline margin-top look inconsistent */
+#mid-group .settings-label {
+  margin-top: 0 !important;
 }
 
-/* ✅ Put slider label (left) and value (right) on same line */
-.slider-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  width:100%;
+/* Slider heading layout */
+.slider-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.slider-head .settings-label{
-  margin:0;
+.slider-head .settings-label,
+.slider-head .settings-value {
+  margin: 0;
 }
 
-.slider-head .settings-value{
-  margin:0;
-  text-align:right;
-  min-width: 44px; /* keeps numbers aligned */
+.slider-head .settings-value {
+  text-align: right;
+  min-width: 44px;
 }
 
+#topp-group {
+  margin-bottom: 22px;
+}
 
-
+/* Generic Settings Elements */
 .settings-group {
   display: flex;
   flex-direction: column;
@@ -210,7 +213,7 @@ body {
   gap: 6px;
 }
 
-/* Controls */
+/* Generic Form Controls */
 .settings-panel select,
 .settings-panel input[type="text"] {
   background: #020617;
@@ -219,8 +222,6 @@ body {
   color: #e5e7eb;
   padding: 6px 10px;
   font-size: 12px;
-  width: 100%;
-  max-width: 100%;
 }
 
 .settings-panel input[type="range"] {
@@ -242,30 +243,33 @@ body {
   cursor: pointer;
 }
 
+.pill-button:hover {
+  background: #111827;
+}
 
-.pill-button:hover { background: #111827; }
-
-/* Hover effects (works with your current HTML) */
-.pill-button.primary{
+/* Primary pill hover effect */
+.pill-button.primary {
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
-.pill-button.primary:hover{
+
+.pill-button.primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 26px rgba(79, 70, 229, 0.35);
   filter: brightness(1.08);
 }
 
-.pill-button.danger{
+/* Danger pill hover effect */
+.pill-button.danger {
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-.pill-button.danger:hover{
+
+.pill-button.danger:hover {
   transform: translateY(-2px);
   background: rgba(220, 38, 38, 0.12);
   box-shadow: 0 10px 22px rgba(220, 38, 38, 0.25);
 }
 
-
-/* Chat area */
+/* Chat Area */
 .chat-main {
   flex: 1;
   overflow: hidden;
@@ -283,7 +287,9 @@ body {
   font-size: 13px;
 }
 
-.message.user { text-align: right; }
+.message.user {
+  text-align: right;
+}
 
 .message.user .bubble {
   background: #666b1e;
@@ -293,7 +299,7 @@ body {
 
 .message.assistant .bubble {
   background: #437a69;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #e5e7eb;
   border-bottom-left-radius: 4px;
 }
@@ -307,8 +313,11 @@ body {
   line-height: 1.35;
 }
 
+
 /* Footer */
-.chat-footer { margin-top: 6px; }
+.chat-footer {
+  margin-top: 6px;
+}
 
 .suggestion-row {
   display: flex;
@@ -359,6 +368,11 @@ body {
   color: #6b7280;
 }
 
+.char-counter.warning {
+  color: #ef4444;
+  font-weight: 600;
+}
+
 .send-button {
   width: 32px;
   height: 32px;
@@ -369,7 +383,8 @@ body {
   cursor: pointer;
 }
 
-/* Dialogs */
+
+/* Dialog */
 .dialog-backdrop {
   position: fixed;
   inset: 0;
@@ -400,20 +415,18 @@ body {
   margin-top: 12px;
 }
 
-
-/* Bigger buttons only inside the "Generation blocked" dialog */
 .dialog-actions .pill-button {
-  width: 140px;         /* increase width */
-  height: 36px;         /* a bit taller than default */
-  margin-bottom: 0;     /* remove global bottom margin inside the row */
+  width: 140px;
+  height: 36px;
+  margin-bottom: 0;
   font-size: 13px;
 }
 
+.hidden {
+  display: none !important;
+}
 
-
-.hidden { display: none !important; }
-
-/* System Usage (inline under Device) */
+/* System Usage */
 .system-usage.inline {
   margin-top: 10px;
   padding: 0;
@@ -448,7 +461,7 @@ body {
 .sys-bar {
   height: 8px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.14);
+  background: rgba(255, 255, 255, 0.14);
   overflow: hidden;
   margin-top: 6px;
 }
@@ -460,68 +473,41 @@ body {
   transition: width 220ms ease;
 }
 
-.sys-fill.gpu { background: #facc15; }
-.sys-fill.cpu { background: #facc15; }
-
-
-/* =======================================
-   Math Mode – Cleanup UI
-   ======================================= */
-
-/* ==========================
-   Math mode UI simplification
-   ========================== */
-
-/* Hide DEVICE label */
-body.math-mode #device-group .settings-label {
-    display: none;
+.sys-fill.gpu,
+.sys-fill.cpu {
+  background: #facc15;
 }
 
-/* Hide CPU & GPU radio buttons */
+/* Math Mode */
+body.math-mode #device-group .settings-label,
 body.math-mode #device-group .radio-label {
-    display: none;
+  display: none;
 }
 
-/* Hide model + temp + top-p + max tokens + seed */
 body.math-mode #model-group,
 body.math-mode #temp-group,
 body.math-mode #topp-group,
 body.math-mode #mid-group,
 body.math-mode #assistant-confirm-settings {
-    display: none;
+  display: none;
 }
 
-/* (optional layout tweaks below, keep whatever you already have) */
-
-/* Improve spacing when radio buttons + DEVICE are removed */
 body.math-mode #device-group {
-    padding-top: 8px;     /* reduce top spacing */
-    margin-top: -10px;    /* pull system usage upward */
+  padding-top: 8px;
+  margin-top: -10px;
 }
 
-/* System Usage subtitle alignment fix */
-body.math-mode #device-group .system-usage-title {
-    margin-top: 0;
-}
-
-/* Ensure system usage bars take full width */
 body.math-mode #device-group .system-usage {
-    width: 100%;
+  width: 100%;
 }
 
-/* Align Clear History button nicely */
 body.math-mode #actions-group {
-    display: flex;
-    justify-content: flex-end; /* push to right side */
-    margin-top: 0px;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0;
 }
 
-
-/* =========================
-   Translate Mode
-   ========================= */
-
-/* Hide assistant-only controls in translator mode */
+/* Translate Mode */
 body.translate-mode #device-group .settings-label,
 body.translate-mode #device-group .radio-label,
 body.translate-mode #model-group,
@@ -534,7 +520,6 @@ body.translate-mode #mid-group > .settings-label:nth-of-type(2) {
   display: none;
 }
 
-/* Keep only system usage visible and align translator layout cleanly */
 body.translate-mode #device-group {
   padding-top: 8px;
   margin-top: -10px;
@@ -545,7 +530,6 @@ body.translate-mode #mid-group {
   align-content: start;
 }
 
-/* Translator controls */
 body.translate-mode #translate-controls {
   display: flex !important;
   flex-direction: column;
@@ -567,12 +551,11 @@ body.translate-mode #translate-target {
   border: 1px solid #4f46e5;
 }
 
-/* Swap button */
 body.translate-mode .swap-button {
   height: 32px;
   border-radius: 10px;
   border: 1px solid #1f2937;
-  background: #4f46e5;
+  background: #6a8208;
   color: #ffffff;
   cursor: pointer;
   font-size: 12px;
@@ -582,7 +565,6 @@ body.translate-mode .swap-button:hover {
   background: #6366f1;
 }
 
-/* Direction line */
 body.translate-mode .translate-direction {
   text-align: center;
   margin-top: 6px;
@@ -591,13 +573,73 @@ body.translate-mode .translate-direction {
   color: #93c5fd;
 }
 
-/* Extra spacing before Clear History only in translator mode */
 body.translate-mode #assistant-clear-history {
   margin-top: 80px;
 }
 
-/* Red warning after 256 chars */
-.char-counter.warning {
-  color: #ef4444;
-  font-weight: 600;
+/* Local Guide Mode */
+.local-controls {
+  display: none;
+}
+
+body.local-mode #local-controls {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.local-mode #translate-controls,
+body.local-mode #model-group,
+body.local-mode #sliders-group,
+body.local-mode #assistant-confirm-settings,
+body.local-mode #assistant-max-tokens,
+body.local-mode #assistant-seed,
+body.local-mode #mid-group > .settings-label:first-child,
+body.local-mode #mid-group > .settings-label:nth-of-type(2) {
+  display: none;
+}
+
+body.local-mode #device-group .settings-label,
+body.local-mode #device-group .radio-label {
+  display: none;
+}
+
+body.local-mode #mid-group {
+  margin-top: 0 !important;
+  align-content: start;
+}
+
+body.local-mode #assistant-clear-history {
+  margin-top: 50px;
+}
+
+#local-search-flight {
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  background: #056d1a;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+#local-search-flight:hover {
+  background: #6366f1;
+}
+
+/* Animated Square Loader */
+.square-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e5e7eb;
+  border-top-color: transparent;
+  border-radius: 2px;
+  animation: square-spin 0.8s linear infinite;
+  margin: auto;
+}
+
+@keyframes square-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
