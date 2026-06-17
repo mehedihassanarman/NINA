@@ -1,19 +1,77 @@
 const boot = window.__BOOT__ || {};
-let cfg = boot.cfg || { model_key: "llama", max_length: 256, temperature: 0.7, top_p: 0.9, seed: 42 };
+
+let cfg = boot.cfg || {
+  model_key: "llama",
+  max_length: 256,
+  temperature: 0.7,
+  top_p: 0.9,
+  seed: 42,
+};
 
 let modalOpen = false;
+let isProcessing = false;
+let currentMode = boot.mode || "assistant";
 
-// === NEW: mode & UI refs ===
-let currentMode = (boot.mode || "assistant");
-const supportedLanguages = boot.supported_languages || ["English", "German"];
 const TRANSLATE_CHAR_LIMIT = 512;
 
+/* Cached DOM Elements */
 const modeTabs = document.querySelectorAll(".mode-tab");
 const settingsRow = document.querySelector(".settings-row");
 const suggestionRow = document.querySelector(".suggestion-row");
 const modeSubtitle = document.getElementById("mode-subtitle");
 
-// footer suggestions per mode
+const el = {
+  // Chat
+  chatLog: document.getElementById("chat-log"),
+  input: document.getElementById("user-input"),
+  sendBtn: document.getElementById("send-btn"),
+
+  // Assistant settings
+  temp: document.getElementById("assistant-temperature"),
+  tempVal: document.getElementById("temperature-value"),
+  topP: document.getElementById("assistant-top-p"),
+  topPVal: document.getElementById("top-p-value"),
+  maxTokens: document.getElementById("assistant-max-tokens"),
+  seed: document.getElementById("assistant-seed"),
+  clearHistory: document.getElementById("assistant-clear-history"),
+  confirmSettings: document.getElementById("assistant-confirm-settings"),
+
+  // Dialog
+  dialog: document.getElementById("assistant-dialog"),
+  dialogTitle: document.getElementById("assistant-dialog-title"),
+  dialogText: document.getElementById("assistant-dialog-text"),
+  dialogClear: document.getElementById("dialog-clear-history"),
+  dialogSkip: document.getElementById("dialog-skip-reply"),
+
+  // System usage
+  cpuBar: document.getElementById("cpu-bar"),
+  cpuText: document.getElementById("cpu-text"),
+  gpuBar: document.getElementById("gpu-bar"),
+  gpuText: document.getElementById("gpu-text"),
+
+  // Character counter
+  charCounter: document.getElementById("char-counter"),
+
+  // Translate controls
+  translateControls: document.getElementById("translate-controls"),
+  translateSource: document.getElementById("translate-source"),
+  translateTarget: document.getElementById("translate-target"),
+  translateSwap: document.getElementById("translate-swap"),
+  translateDirection: document.getElementById("translate-direction"),
+
+  // Settings groups used in mode switching
+  deviceGroup: document.getElementById("device-group"),
+  modelGroup: document.getElementById("model-group"),
+  slidersGroup: document.getElementById("sliders-group"),
+
+  // Local guide controls
+  localControls: document.getElementById("local-controls"),
+  localOriginAirport: document.getElementById("local-origin-airport"),
+  localDestinationAirport: document.getElementById("local-destination-airport"),
+  localSearchFlight: document.getElementById("local-search-flight"),
+};
+
+/* Footer Suggestions per Mode */
 const suggestionPresets = {
   assistant: [
     { label: "Ask a question?", value: "What is photosynthesis?" },
@@ -21,6 +79,7 @@ const suggestionPresets = {
     { label: "Display entire chat history.", value: "show_chat_history()" },
     { label: "Clear n rounds conversation from beginning.", value: "Clear 2" },
   ],
+
   math: [
     { label: "Solve Equation", value: "Solve Equation: 4x + 2y = 10 and x + y = 2" },
     { label: "Word Problems", value: "A pen costs €2 and a notebook costs €3. How much for 5 pens and 4 notebook?" },
@@ -28,9 +87,8 @@ const suggestionPresets = {
     { label: "Statistics", value: "Find the mean of the numbers: 6, 8, 10, 12, 14, 9" },
     { label: "Pattern Recognition", value: "Find the next number: 2, 4, 6, 8, 10, ?" },
     { label: "Probability", value: "A bag has 5 red balls and 3 blue balls. What is the probability of picking a red ball?" },
-    
-    // no 4th item in math mode → we’ll hide the extra chip
   ],
+
   translate: [
     { label: "Word", value: "Water" },
     { label: "Question", value: "What is photosynthesis?" },
@@ -38,78 +96,17 @@ const suggestionPresets = {
     { label: "Passage", value: "Europe is a continent located entirely in the Northern Hemisphere and mostly in the Eastern Hemisphere. It is bordered by the Arctic Ocean to the north, the Atlantic Ocean to the west, the Mediterranean Sea to the south and Asia to the east." },
   ],
 
-
+  local: [
+    { label: "Weather", value: "How’s the weather today in Darmstadt?" },
+    { label: "News", value: "Tell me the latest news about Frankfurt." },
+    { label: "Tourist Places", value: "Suggest me some tourist places in Munich." },
+    { label: "Supermarkets", value: "I want to buy groceries in Darmstadt." },
+    { label: "Hotels", value: "Where can I stay overnight in Hamburg?" },
+    { label: "Flights", value: "I want to travel New York." },
+  ],
 };
 
-
-
-const el = {
-  chatLog: document.getElementById("chat-log"),
-  input: document.getElementById("user-input"),
-  sendBtn: document.getElementById("send-btn"),
-
-  temp: document.getElementById("assistant-temperature"),
-  tempVal: document.getElementById("temperature-value"),
-  topP: document.getElementById("assistant-top-p"),
-  topPVal: document.getElementById("top-p-value"),
-  maxTokens: document.getElementById("assistant-max-tokens"),
-  seed: document.getElementById("assistant-seed"),
-
-  clearHistory: document.getElementById("assistant-clear-history"),
-  confirmSettings: document.getElementById("assistant-confirm-settings"),
-
-  dialog: document.getElementById("assistant-dialog"),
-  dialogTitle: document.getElementById("assistant-dialog-title"),
-  dialogText: document.getElementById("assistant-dialog-text"),
-  dialogClear: document.getElementById("dialog-clear-history"),
-  dialogSkip: document.getElementById("dialog-skip-reply"),
-
-  cpuBar: document.getElementById("cpu-bar"),
-  cpuText: document.getElementById("cpu-text"),
-  gpuBar: document.getElementById("gpu-bar"),
-  gpuText: document.getElementById("gpu-text"),
-
-  charCounter: document.getElementById("char-counter"),
-
-  translateControls: document.getElementById("translate-controls"),
-  translateSource: document.getElementById("translate-source"),
-  translateTarget: document.getElementById("translate-target"),
-  translateSwap: document.getElementById("translate-swap"),
-  translateDirection: document.getElementById("translate-direction"),
-
-  deviceGroup: document.getElementById("device-group"),
-  modelGroup: document.getElementById("model-group"),
-  slidersGroup: document.getElementById("sliders-group"),
-  confirmBtn: document.getElementById("assistant-confirm-settings"),
-};
-
-
-
-
-
-
-// === NEW: update footer chips when mode changes ===
-function updateSuggestionRow(mode) {
-  if (!suggestionRow) return;
-
-  const chips = Array.from(suggestionRow.querySelectorAll(".chip"));
-  const preset = suggestionPresets[mode] || suggestionPresets.assistant;
-
-  chips.forEach((chip, index) => {
-    const item = preset[index];
-    if (item) {
-      chip.classList.remove("hidden");
-      chip.textContent = item.label;
-      chip.dataset.suggest = item.value;
-    } else {
-      // hide extra chips if mode has fewer suggestions
-      chip.classList.add("hidden");
-    }
-  });
-}
-
-
-
+/* Small UI Helpers */
 function scrollToBottom() {
   el.chatLog.scrollTop = el.chatLog.scrollHeight;
 }
@@ -127,14 +124,28 @@ function addBubble(role, text) {
   scrollToBottom();
 }
 
-function setSliderLabels() {
-  el.tempVal.textContent = Number(el.temp.value).toFixed(2);
-  el.topPVal.textContent = Number(el.topP.value).toFixed(2);
+function updateSuggestionRow(mode) {
+  if (!suggestionRow) return;
+
+  const chips = Array.from(suggestionRow.querySelectorAll(".chip"));
+  const preset = suggestionPresets[mode] || suggestionPresets.assistant;
+
+  chips.forEach((chip, index) => {
+    const item = preset[index];
+    if (item) {
+      chip.classList.remove("hidden");
+      chip.textContent = item.label;
+      chip.dataset.suggest = item.value;
+    } else {
+      chip.classList.add("hidden");
+    }
+  });
 }
 
-setSliderLabels();
-el.temp.addEventListener("input", setSliderLabels);
-el.topP.addEventListener("input", setSliderLabels);
+function setSliderLabels() {
+  if (el.tempVal) el.tempVal.textContent = Number(el.temp.value).toFixed(2);
+  if (el.topPVal) el.topPVal.textContent = Number(el.topP.value).toFixed(2);
+}
 
 function autoGrowTextarea() {
   el.input.style.height = "auto";
@@ -146,6 +157,11 @@ function updateTranslateDirection() {
   el.translateDirection.textContent = `${el.translateSource.value} → ${el.translateTarget.value}`;
 }
 
+function extractAirportCode(text) {
+  const value = (text || "").trim();
+  const match = value.match(/^([A-Za-z]{3})\s*-/);
+  return match ? match[1].toUpperCase() : "";
+}
 
 function updateCharCounter() {
   if (!el.charCounter) return;
@@ -162,41 +178,49 @@ function updateCharCounter() {
   }
 }
 
-el.input.addEventListener("input", () => {
-  autoGrowTextarea();
-  updateCharCounter();
-});
-autoGrowTextarea();
-updateCharCounter();
+/* Disable input/button during LLM response */
+function setProcessingState(processing) {
+  isProcessing = processing;
 
-document.querySelectorAll(".chip").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const t = btn.getAttribute("data-suggest") || btn.textContent || "";
-    el.input.value = t;
-    autoGrowTextarea();
-    el.input.focus();
-  });
-});
+  if (el.sendBtn) {
+    el.sendBtn.disabled = processing;
 
+    if (processing) {
+      el.sendBtn.innerHTML = '<div class="square-spinner"></div>';
+    } else {
+      el.sendBtn.textContent = "➤";
+    }
+
+    el.sendBtn.style.opacity = processing ? "0.9" : "1";
+    el.sendBtn.style.cursor = processing ? "not-allowed" : "pointer";
+  }
+
+  if (el.input) {
+    el.input.disabled = processing;
+  }
+}
+
+/* API Helper */
 async function postJSON(url, body) {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body || {}),
   });
+
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`HTTP ${res.status}: ${txt}`);
   }
+
   return res.json();
 }
 
-/* Dialog helpers */
+/* Dialog Helpers */
 function openDialog(title, text) {
   if (title) el.dialogTitle.textContent = title;
   if (text) el.dialogText.textContent = text;
 
-  // Always show the Clear History button in the dialog
   if (el.dialogClear) el.dialogClear.classList.remove("hidden");
 
   el.dialog.classList.remove("hidden");
@@ -208,12 +232,13 @@ function closeDialog() {
   modalOpen = false;
 }
 
+/* Mode UI Switching */
 function applyModeUI(mode) {
-  document.body.classList.remove("math-mode", "translate-mode");
+  document.body.classList.remove("math-mode", "translate-mode", "local-mode");
 
-  // reset visibility first
   if (el.translateControls) el.translateControls.classList.add("hidden");
-  if (el.confirmBtn) el.confirmBtn.classList.remove("hidden");
+  if (el.localControls) el.localControls.classList.add("hidden");
+  if (el.confirmSettings) el.confirmSettings.classList.remove("hidden");
   if (el.modelGroup) el.modelGroup.classList.remove("hidden");
   if (el.slidersGroup) el.slidersGroup.classList.remove("hidden");
   if (el.maxTokens) el.maxTokens.classList.remove("hidden");
@@ -226,14 +251,17 @@ function applyModeUI(mode) {
   } else if (mode === "math") {
     if (settingsRow) settingsRow.classList.remove("hidden");
     document.body.classList.add("math-mode");
-    if (modeSubtitle) modeSubtitle.textContent = "Math Mode · Solve equations and problems";
+    if (modeSubtitle) modeSubtitle.textContent = "Math Mode · Solve Math Problems";
   } else if (mode === "translate") {
     if (settingsRow) settingsRow.classList.remove("hidden");
     document.body.classList.add("translate-mode");
-    if (modeSubtitle) modeSubtitle.textContent = "Translate Mode · Translate text between languages";
-
-    // show translator controls
+    if (modeSubtitle) modeSubtitle.textContent = "Translation Mode · Instant Language Translator";
     if (el.translateControls) el.translateControls.classList.remove("hidden");
+  } else if (mode === "local") {
+    if (settingsRow) settingsRow.classList.remove("hidden");
+    document.body.classList.add("local-mode");
+    if (modeSubtitle) modeSubtitle.textContent = "Local Guide · Your Smart Travel Assistant";
+    if (el.localControls) el.localControls.classList.remove("hidden");
   }
 
   updateSuggestionRow(mode);
@@ -241,6 +269,106 @@ function applyModeUI(mode) {
   updateTranslateDirection();
 }
 
+/* Chat Message Sending */
+async function sendMessage(text) {
+  if (isProcessing || modalOpen) return;
+
+  const cleanText = (text || "").trim();
+  if (!cleanText) return;
+
+  setProcessingState(true);
+  addBubble("user", cleanText);
+
+  const typing = document.createElement("div");
+  typing.className = "message assistant";
+  typing.innerHTML = `<div class="bubble">…</div>`;
+  el.chatLog.appendChild(typing);
+  scrollToBottom();
+
+  let endpoint = "/api/chat";
+  let payload = { message: cleanText };
+
+  if (currentMode === "math") {
+    endpoint = "/api/math";
+  } else if (currentMode === "translate") {
+    endpoint = "/api/translate";
+    payload = {
+      message: cleanText,
+      source_lang: el.translateSource?.value || "English",
+      target_lang: el.translateTarget?.value || "German",
+    };
+  } else if (currentMode === "local") {
+    endpoint = "/api/guide";
+    payload = { message: cleanText };
+  }
+
+  try {
+    const out = await postJSON(endpoint, payload);
+
+    if (typing.parentNode) typing.parentNode.removeChild(typing);
+
+    if (out.action_required) {
+      openDialog("Generation blocked", out.message || "");
+      return;
+    }
+
+    if (out.reply) {
+      addBubble("assistant", out.reply);
+    }
+  } catch (err) {
+    if (typing.parentNode) typing.parentNode.removeChild(typing);
+    addBubble("assistant", `Error: ${err.message}`);
+  } finally {
+    setProcessingState(false);
+  }
+}
+
+/* Flight Search */
+if (el.localSearchFlight) {
+  el.localSearchFlight.addEventListener("click", async () => {
+    if (currentMode !== "local" || isProcessing) return;
+
+    const originText = el.localOriginAirport?.value || "";
+    const destinationText = el.localDestinationAirport?.value || "";
+
+    const origin = extractAirportCode(originText);
+    const destination = extractAirportCode(destinationText);
+
+    if (!origin || !destination) {
+      addBubble("assistant", "Please select valid Departure and Arrival Airports from the list.");
+      return;
+    }
+
+    setProcessingState(true);
+    addBubble("user", `Search flight: ${origin} → ${destination}`);
+
+    const typing = document.createElement("div");
+    typing.className = "message assistant";
+    typing.innerHTML = `<div class="bubble">…</div>`;
+    el.chatLog.appendChild(typing);
+    scrollToBottom();
+
+    try {
+      const out = await postJSON("/api/flights", {
+        origin,
+        destination,
+      });
+
+      if (typing.parentNode) typing.parentNode.removeChild(typing);
+
+      if (out.reply) {
+        addBubble("assistant", out.reply);
+      }
+    } catch (err) {
+      if (typing.parentNode) typing.parentNode.removeChild(typing);
+      addBubble("assistant", `Error: ${err.message}`);
+    } finally {
+      setProcessingState(false);
+    }
+  });
+}
+
+/* Dialog Actions */
 el.dialogSkip.addEventListener("click", async () => {
   try {
     if (currentMode === "assistant") {
@@ -249,17 +377,28 @@ el.dialogSkip.addEventListener("click", async () => {
       if (out.reply) addBubble("assistant", out.reply);
     } else if (currentMode === "math") {
       closeDialog();
-      addBubble("assistant", "Chat history is too large. This response was skipped. Please clear or truncate your history.");
+      addBubble(
+        "assistant",
+        "Chat history is too large. This response was skipped. Please clear or truncate your history."
+      );
     } else if (currentMode === "translate") {
       closeDialog();
-      addBubble("assistant", "The translation input is too large for the model context. Please shorten your text and try again.");
+      addBubble(
+        "assistant",
+        "The translation input is too large for the model context. Please shorten your text and try again."
+      );
+    } else if (currentMode === "local") {
+      closeDialog();
+      addBubble(
+        "assistant",
+        "The Local Guide message and history are too large for the model context. Please shorten your text or clear the history."
+      );
     }
   } catch (err) {
     closeDialog();
     addBubble("assistant", `Error: ${err.message}`);
   }
 });
-
 
 el.dialogClear.addEventListener("click", async () => {
   try {
@@ -278,6 +417,11 @@ el.dialogClear.addEventListener("click", async () => {
       closeDialog();
       el.chatLog.innerHTML = "";
       addBubble("assistant", "Translation history cleared. Please enter text again.");
+    } else if (currentMode === "local") {
+      await postJSON("/api/clear_mode", { mode: "local" });
+      closeDialog();
+      el.chatLog.innerHTML = "";
+      addBubble("assistant", "Local Guide history cleared. Please enter text again.");
     }
   } catch (err) {
     closeDialog();
@@ -285,7 +429,7 @@ el.dialogClear.addEventListener("click", async () => {
   }
 });
 
-/* Clear history */
+/* Main Buttons */
 el.clearHistory.addEventListener("click", async () => {
   if (currentMode === "assistant") {
     await postJSON("/api/clear", {});
@@ -293,12 +437,13 @@ el.clearHistory.addEventListener("click", async () => {
     await postJSON("/api/clear_mode", { mode: "math" });
   } else if (currentMode === "translate") {
     await postJSON("/api/clear_mode", { mode: "translate" });
+  } else if (currentMode === "local") {
+    await postJSON("/api/clear_mode", { mode: "local" });
   }
+
   el.chatLog.innerHTML = "";
 });
 
-
-/* Confirm settings (clears history if model changed, backend handles that) */
 el.confirmSettings.addEventListener("click", async () => {
   if (currentMode !== "assistant") return;
 
@@ -326,54 +471,12 @@ el.confirmSettings.addEventListener("click", async () => {
   }
 });
 
-/* Send message */
-async function sendMessage(text) {
-  addBubble("user", text);
-
-  const typing = document.createElement("div");
-  typing.className = "message assistant";
-  typing.innerHTML = `<div class="bubble">…</div>`;
-  el.chatLog.appendChild(typing);
-  scrollToBottom();
-
-  let endpoint = "/api/chat";
-  let payload = { message: text };
-
-  if (currentMode === "math") {
-    endpoint = "/api/math";
-  } else if (currentMode === "translate") {
-    endpoint = "/api/translate";
-    payload = {
-      message: text,
-      source_lang: el.translateSource?.value || "English",
-      target_lang: el.translateTarget?.value || "German",
-    };
-  }
-
-  try {
-    const out = await postJSON(endpoint, payload);
-
-    if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
-
-    if (out.action_required) {
-      openDialog("Generation blocked", out.message || "");
-      return;
-    }
-
-    if (out.reply) {
-      addBubble("assistant", out.reply);
-    }
-  } catch (err) {
-    if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
-    addBubble("assistant", `Error: ${err.message}`);
-  }
-}
-
-
 el.sendBtn.addEventListener("click", async () => {
-  if (modalOpen) return;
+  if (modalOpen || isProcessing) return;
+
   const text = (el.input.value || "").trim();
   if (!text) return;
+
   el.input.value = "";
   autoGrowTextarea();
   updateCharCounter();
@@ -383,9 +486,12 @@ el.sendBtn.addEventListener("click", async () => {
 el.input.addEventListener("keydown", async (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    if (modalOpen) return;
+
+    if (modalOpen || isProcessing) return;
+
     const text = (el.input.value || "").trim();
     if (!text) return;
+
     el.input.value = "";
     autoGrowTextarea();
     updateCharCounter();
@@ -393,10 +499,38 @@ el.input.addEventListener("keydown", async (e) => {
   }
 });
 
+/* Misc UI Events */
+document.querySelectorAll(".chip").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const t = btn.getAttribute("data-suggest") || btn.textContent || "";
+    el.input.value = t;
+    autoGrowTextarea();
+    el.input.focus();
+  });
+});
 
+if (el.translateSwap) {
+  el.translateSwap.addEventListener("click", () => {
+    const oldSource = el.translateSource.value;
+    el.translateSource.value = el.translateTarget.value;
+    el.translateTarget.value = oldSource;
+    updateTranslateDirection();
+  });
+}
 
-// === NEW: mode tabs ===
-// === mode tabs ===
+if (el.translateSource) {
+  el.translateSource.addEventListener("change", updateTranslateDirection);
+}
+
+if (el.translateTarget) {
+  el.translateTarget.addEventListener("change", updateTranslateDirection);
+}
+
+el.input.addEventListener("input", () => {
+  autoGrowTextarea();
+  updateCharCounter();
+});
+
 modeTabs.forEach((tab) => {
   tab.addEventListener("click", async () => {
     const mode = tab.dataset.mode;
@@ -416,18 +550,7 @@ modeTabs.forEach((tab) => {
   });
 });
 
-if (el.translateSwap) {
-  el.translateSwap.addEventListener("click", () => {
-    const oldSource = el.translateSource.value;
-    el.translateSource.value = el.translateTarget.value;
-    el.translateTarget.value = oldSource;
-    updateTranslateDirection();
-  });
-}
-
-if (el.translateSource) el.translateSource.addEventListener("change", updateTranslateDirection);
-if (el.translateTarget) el.translateTarget.addEventListener("change", updateTranslateDirection);
-
+/* System Usage Info */
 async function refreshSystemUsage() {
   try {
     const out = await postJSON("/api/system", {});
@@ -449,18 +572,9 @@ async function refreshSystemUsage() {
   }
 }
 
+setSliderLabels();
+autoGrowTextarea();
+updateCharCounter();
 applyModeUI(currentMode);
 refreshSystemUsage();
 setInterval(refreshSystemUsage, 3000);
-
-
-
-
-
-
-
-
-
-
-
-
