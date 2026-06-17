@@ -9,6 +9,7 @@
   <div class="app-bg">
     <div class="chat-shell">
 
+      <!-- Header -->
       <header class="chat-header">
         <div class="chat-title-area">
           <div class="avatar-circle">N</div>
@@ -23,13 +24,15 @@
         </div>
       </header>
 
+      <!-- Mode Tabs -->
       <nav class="mode-tabs">
         <button class="mode-tab active" data-mode="assistant">Assistant</button>
         <button class="mode-tab" data-mode="math">Math</button>
         <button class="mode-tab" data-mode="translate">Translate</button>
-        <button class="mode-tab" data-mode="local" disabled>Local Guide</button>
+        <button class="mode-tab" data-mode="local">Local Guide</button>
       </nav>
 
+      <!-- Settings Panel -->
       <section class="settings-row">
         <div class="settings-panel" id="assistant-settings">
 
@@ -37,17 +40,14 @@
             <div class="settings-label">Device</div>
 
             <label class="radio-label">
-              <input type="radio" name="assistant-device" value="cpu"
-                {% if cfg.device == 'cpu' or not cfg.device %}checked{% endif %}>
-              CPU
+              <input type="radio" name="assistant-device" value="cpu" {% if cfg.device == 'cpu' or not cfg.device %}checked{% endif %}> CPU
             </label>
 
             <label class="radio-label">
-              <input type="radio" name="assistant-device" value="gpu"
-                {% if cfg.device in ['gpu','cuda'] %}checked{% endif %}>
-              GPU
+              <input type="radio" name="assistant-device" value="gpu" {% if cfg.device in ['gpu','cuda'] %}checked{% endif %}> GPU
             </label>
 
+            <!-- CPU / GPU usage -->
             <div class="system-usage inline">
               <div class="sys-title">SYSTEM USAGE</div>
 
@@ -69,46 +69,40 @@
             </div>
           </div>
 
+          <!-- Model Selection -->
           <div class="settings-group" id="model-group">
             <div class="settings-label">Model</div>
 
             <label class="radio-label">
-              <input type="radio" name="assistant-model" value="llama"
-                {% if cfg.model_key == 'llama' %}checked{% endif %}/>
-              Llama-3.2-1B
+              <input type="radio" name="assistant-model" value="llama" {% if cfg.model_key == 'llama' %}checked{% endif %}/> Llama-3.2-1B
             </label>
 
             <label class="radio-label">
-              <input type="radio" name="assistant-model" value="qwen"
-                {% if cfg.model_key == 'qwen' %}checked{% endif %}/>
-              Qwen-0.5B
+              <input type="radio" name="assistant-model" value="qwen" {% if cfg.model_key == 'qwen' %}checked{% endif %}/> Qwen-0.5B
             </label>
           </div>
 
+          <!-- Temperature and Top-p -->
           <div class="settings-group" id="sliders-group">
             <div class="slider-block" id="temp-group">
               <div class="slider-head">
                 <div class="settings-label">Creativity (temperature)</div>
-                <div class="settings-value" id="temperature-value">
-                  {{ "%.2f"|format(cfg.temperature) }}
-                </div>
+                <div class="settings-value" id="temperature-value"> {{ "%.2f"|format(cfg.temperature) }}</div>
               </div>
-              <input type="range" id="assistant-temperature" min="0" max="1.5" step="0.05"
-                    value="{{ cfg.temperature }}" />
+              <input type="range" id="assistant-temperature" min="0" max="1.5" step="0.05" value="{{ cfg.temperature }}" />
             </div>
 
             <div class="slider-block" id="topp-group">
               <div class="slider-head">
                 <div class="settings-label">Top-p</div>
-                <div class="settings-value" id="top-p-value">
-                  {{ "%.2f"|format(cfg.top_p) }}
+                <div class="settings-value" id="top-p-value"> {{ "%.2f"|format(cfg.top_p) }}
                 </div>
               </div>
-              <input type="range" id="assistant-top-p" min="0" max="1" step="0.05"
-                    value="{{ cfg.top_p }}" />
+              <input type="range" id="assistant-top-p" min="0" max="1" step="0.05" value="{{ cfg.top_p }}" />
             </div>
           </div>
 
+          <!-- Middle Controls Area -->
           <div class="settings-group" id="mid-group">
             <div class="settings-label">Max tokens</div>
             <select id="assistant-max-tokens">
@@ -143,8 +137,37 @@
 
               <div class="translate-direction" id="translate-direction">English → German</div>
             </div>
+
+            <div class="local-controls" id="local-controls">
+              <div class="settings-label">DEPARTURE (From)</div>
+              <input
+                type="text"
+                id="local-origin-airport"
+                list="airport-options"
+                value="FRA - Frankfurt am Main Airport"
+                placeholder="Select departure airport"
+              />
+
+              <div class="settings-label">ARRIVAL (To)</div>
+              <input
+                type="text"
+                id="local-destination-airport"
+                list="airport-options"
+                value="JFK - John F Kennedy International Airport"
+                placeholder="Select destination airport"
+              />
+
+              <datalist id="airport-options">
+                {% for airport in airports %}
+                  <option value="{{ airport.get('iata', '') }} - {{ airport.get('name', 'Unknown Airport') }}"></option>
+                {% endfor %}
+              </datalist>
+
+              <button type="button" class="swap-button" id="local-search-flight"> Search Flights </button>
+            </div>
           </div>
 
+          <!-- Action Buttons -->
           <div class="settings-group" id="actions-group">
             <div class="actions-right">
               <button class="pill-button primary" id="assistant-confirm-settings">Confirm Settings</button>
@@ -155,10 +178,12 @@
         </div>
       </section>
 
+      <!-- Chat Display Area -->
       <main class="chat-main">
         <div id="chat-log" class="chat-log"></div>
       </main>
 
+      <!-- Footer Suggestions -->
       <footer class="chat-footer">
         <div class="suggestion-row">
           <button class="chip" data-suggest="What is photosynthesis?">Ask a question?</button>
@@ -180,6 +205,7 @@
     </div>
   </div>
 
+  <!-- Popup Window -->
   <div class="dialog-backdrop hidden" id="assistant-dialog">
     <div class="dialog">
       <div class="dialog-title" id="assistant-dialog-title">Generation blocked</div>
@@ -193,6 +219,7 @@
     </div>
   </div>
 
+  <!-- Boot Data for app.js -->
   <script>
     window.__BOOT__ = {
       cfg: {{ cfg|tojson }},
