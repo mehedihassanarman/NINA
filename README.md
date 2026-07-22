@@ -3,7 +3,7 @@
 Large Language Models (LLMs) have demonstrated impressive general-purpose reasoning and conversational abilities. However, their computational cost restricts deployment on low-resource devices. This project presents **NINA**, a lightweight, modular AI system that operates using **very small local models (1B parameters and below)** while offering functionality typically associated with significantly larger LLMs. The system integrates six independent modes: a *general assistant*, a symbolic-supported *math solver*, a multi-language *translator*, a real-time *local guide* capable of retrieving weather, news, tourism and flight information, a *code* assistant capable of assisting with programming tasks and a *data analysis* module for conversational analysis of CSV and Excel datasets through automated statistical processing..
 
 The motivation behind **NINA** is to investigate whether **useful and reliable AI functionality can be achieved using only very small local models** running on consumer-grade hardware such as a laptop GPU with **4 GB VRAM**. Through a combination of prompt engineering, hybrid symbolic reasoning, API-based retrieval, tight memory management and deterministic validation layers, **NINA** demonstrates that meaningful and practical AI systems can be built despite significant model-size and hardware constraints. The project highlights challenges in inference stability, hallucination control, context window management, multimodal integration and proposes strategies to address each of them.
-<p align="center">  <img src="static/Images/Image1.jpg" width="70%"> </p>
+
 [![Watch the video](https://github.com/mehedihassanarman/NINA/blob/main/static/Images/Image1.jpg)](https://www.youtube.com/shorts/9Be4f0e8LHo)
 ---
 
