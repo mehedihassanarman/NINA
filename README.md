@@ -4,7 +4,7 @@ Large Language Models (LLMs) have demonstrated impressive general-purpose reason
 
 The motivation behind **NINA** is to investigate whether **useful and reliable AI functionality can be achieved using only very small local models** running on consumer-grade hardware such as a laptop GPU with **4 GB VRAM**. Through a combination of prompt engineering, hybrid symbolic reasoning, API-based retrieval, tight memory management and deterministic validation layers, **NINA** demonstrates that meaningful and practical AI systems can be built despite significant model-size and hardware constraints. The project highlights challenges in inference stability, hallucination control, context window management, multimodal integration and proposes strategies to address each of them.
 <p align="center">  <img src="static/Images/Image1.jpg" width="70%"> </p>
-
+[![Watch the video](https://github.com/mehedihassanarman/NINA/blob/main/static/Images/Image1.jpg)](https://www.youtube.com/shorts/9Be4f0e8LHo)
 ---
 
 
