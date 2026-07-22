@@ -29,7 +29,6 @@ A hybrid computation module combining model-driven reasoning with symbolic mathe
 - Geometry and measurement problems
 - Basic statistics
 - Word problem interpretation
-- Safe symbolic computation via SymPy
 - Clear separation between reasoning and exact calculation
 
 ##
@@ -124,7 +123,6 @@ NINA/
 ├── models/
 ├── static/
 ├── templates/
-├── basefunctions.py
 ├── airports.json
 ├── app.py
 ├── basefunctions.py
