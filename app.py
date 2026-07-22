@@ -9,7 +9,8 @@ from flask import Flask, jsonify, render_template, request, session
 
 # Loading modules
 from normal_mode import normal_mode_load_model, normal_chat_turn
-from multi_modes import get_device as mm_get_device, load_llama_model as mm_load_llama_model, math_mode, translator_mode, SUPPORTED_LANGUAGES, guide_mode, load_airports,AIRPORTS,fetch_flights
+from multi_modes import get_device as mm_get_device, load_llama_model as mm_load_llama_model, math_mode, translator_mode, programming_mode, SUPPORTED_LANGUAGES, guide_mode, load_airports,AIRPORTS,fetch_flights
+from data_analysis import build_dataset_context, dataframe_metadata, data_analysis_chat, load_dataset, make_upload_reply
 
 # Flask app setup
 app = Flask(__name__)
@@ -50,10 +51,14 @@ def get_sid() -> str:
     if sid not in CHAT_STATE:
         CHAT_STATE[sid] = {
             "cfg": ChatConfig(),
-            "history": [],              # assistant history
+            "history": [],              # assistant mode history
             "math_history": [],         # math mode history
             "translate_history": [],    # translator mode history
             "guide_history": [],        # local guide mode history
+            "programming_history": [],  # programming mode history
+            "data_history": [],
+            "data_context": None,
+            "data_filename": None,
             "guide_current_city": None,
             "pending_user_input": None,
             "pending_reason": None,
@@ -135,6 +140,60 @@ def get_guide_current_city() -> Optional[str]:
 def set_guide_current_city(city: Optional[str]) -> None:
     state = get_state()
     state["guide_current_city"] = city
+
+
+# Programming Mode history helpers
+def get_programming_history():
+    state = get_state()
+    return state.get("programming_history", [])
+
+
+def set_programming_history(history):
+    state = get_state()
+    state["programming_history"] = history
+
+
+def clear_programming_history():
+    state = get_state()
+    state["programming_history"] = []
+
+
+# Data Analysis history and dataset helpers
+def get_data_history() -> list[str]:
+    state = get_state()
+    return state.get("data_history", [])
+
+
+def set_data_history(history: list[str]) -> None:
+    state = get_state()
+    state["data_history"] = history
+
+
+def get_data_context() -> Optional[str]:
+    state = get_state()
+    return state.get("data_context")
+
+
+def set_data_context(context: Optional[str]) -> None:
+    state = get_state()
+    state["data_context"] = context
+
+
+def get_data_filename() -> Optional[str]:
+    state = get_state()
+    return state.get("data_filename")
+
+
+def set_data_filename(filename: Optional[str]) -> None:
+    state = get_state()
+    state["data_filename"] = filename
+
+
+def clear_data_analysis() -> None:
+    state = get_state()
+    state["data_history"] = []
+    state["data_context"] = None
+    state["data_filename"] = None
 
 
 # Pending assistant modal helpers. Used when generation is blocked due to prompt or context limits.
@@ -232,6 +291,13 @@ def get_guide_model():
         GUIDE_MODEL, GUIDE_TOKENIZER = mm_load_llama_model(GUIDE_DEVICE)
     return GUIDE_MODEL, GUIDE_TOKENIZER, GUIDE_DEVICE
 
+
+def get_programming_model():
+    return get_math_model()
+
+
+def get_data_model():
+    return get_math_model()
 
 # Routes : System Usage
 @app.post("/api/system")
@@ -357,6 +423,14 @@ def api_clear_mode():
         clear_guide_history()
         set_guide_current_city(None)
         return jsonify(ok=True, mode="local")
+    
+    if mode == "programming":
+        clear_programming_history()
+        return jsonify(ok=True, mode="programming")
+    
+    if mode == "data":
+        clear_data_analysis()
+        return jsonify(ok=True, mode="data")
 
     return jsonify(ok=False, error=f"Unsupported mode: {mode}"), 400
 
@@ -385,7 +459,7 @@ def api_chat():
         seed=cfg.seed,
     )
 
-    # If generation skipped for safety (prompt/context/OOM), ask for user choice
+    # If generation skipped for safety (prompt/context/OOM), asks for user's choice
     if out.get("skipped") and out.get("reason") in {"prompt_too_long", "context_too_long", "oom"}:
         set_pending(
             user_input=user_input,
@@ -605,6 +679,181 @@ def api_flights():
     destination = (data.get("destination") or "").strip()
     reply = fetch_flights(origin, destination)
     return jsonify(ok=True, reply=reply)
+
+
+
+# Routes: Programming Assisteant Mode
+@app.post("/api/programming")
+def api_programming():
+
+    data = request.get_json(force=True) or {}
+
+    prompt = ( data.get("prompt") or data.get("message") or "" ).strip()
+
+    model, tokenizer, device = get_programming_model()
+
+    result = programming_mode(
+        model=model,
+        tokenizer=tokenizer,
+        device=device,
+        history=get_programming_history(),
+        user_input=prompt,
+    )
+
+    set_programming_history(result["history"])
+
+    return jsonify(
+        ok=True,
+        reply=result["reply"],
+        skipped=result.get("skipped", False),
+        reason=result.get("reason"),
+    )
+
+
+
+@app.post("/api/data/upload")
+def api_data_upload():
+    uploaded_file = request.files.get("file")
+
+    try:
+        dataframe = load_dataset(uploaded_file)
+
+        filename = (
+            uploaded_file.filename
+            if uploaded_file is not None
+            else "dataset"
+        )
+
+        context = build_dataset_context(
+            dataframe=dataframe,
+            filename=filename,
+        )
+
+        metadata = dataframe_metadata(
+            dataframe=dataframe,
+            filename=filename,
+        )
+
+        set_data_context(context)
+        set_data_filename(filename)
+        set_data_history([])
+
+        return jsonify(
+            ok=True,
+            **metadata,
+            reply=make_upload_reply(
+                dataframe=dataframe,
+                filename=filename,
+            ),
+        )
+
+    except ValueError as exc:
+        return jsonify(
+            ok=False,
+            error=str(exc),
+        ), 400
+
+    except Exception as exc:
+        app.logger.exception(
+            "Unexpected Data Analysis upload failure"
+        )
+
+        return jsonify(
+            ok=False,
+            error=f"Unexpected dataset error: {exc}",
+        ), 500
+
+
+@app.post("/api/data")
+def api_data_analysis():
+    data = request.get_json(force=True) or {}
+
+    user_input = (
+        data.get("message")
+        or data.get("prompt")
+        or ""
+    ).strip()
+
+    history = get_data_history()
+    dataset_context = get_data_context()
+
+    if not user_input:
+        return jsonify(
+            ok=True,
+            reply="",
+            history=history,
+            skipped=True,
+            reason="empty_input",
+        )
+
+    if not dataset_context:
+        return jsonify(
+            ok=True,
+            action_required=False,
+            reply=(
+                "Please upload a CSV or Excel dataset before "
+                "asking data-analysis questions."
+            ),
+            history=history,
+            skipped=True,
+            reason="no_dataset",
+        )
+
+    try:
+        model, tokenizer, device = get_data_model()
+
+        result = data_analysis_chat(
+            model=model,
+            tokenizer=tokenizer,
+            device=device,
+            history=history,
+            user_input=user_input,
+            dataset_context=dataset_context,
+        )
+
+        updated_history = result.get(
+            "history",
+            history,
+        )
+
+        set_data_history(updated_history)
+
+        blocked_reasons = {
+            "prompt_too_long",
+            "no_space_for_generation",
+            "oom",
+        }
+
+        if (
+            result.get("skipped")
+            and result.get("reason") in blocked_reasons
+        ):
+            return jsonify(
+                ok=True,
+                action_required=True,
+                action_type=result.get("reason"),
+                message=result.get("reply", ""),
+                history=updated_history,
+            )
+
+        return jsonify(
+            ok=True,
+            action_required=False,
+            reply=result.get("reply", ""),
+            history=updated_history,
+            skipped=result.get("skipped", False),
+            reason=result.get("reason"),
+        )
+
+    except Exception as exc:
+        app.logger.exception(
+            "Unexpected Data Analysis generation failure"
+        )
+
+        return jsonify(
+            ok=False,
+            error=f"Data Analysis failed: {exc}",
+        ), 500
 
 
 if __name__ == "__main__":
