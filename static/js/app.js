@@ -69,6 +69,12 @@ const el = {
   localOriginAirport: document.getElementById("local-origin-airport"),
   localDestinationAirport: document.getElementById("local-destination-airport"),
   localSearchFlight: document.getElementById("local-search-flight"),
+
+  // Data analysis mode controls
+  dataControls: document.getElementById("data-controls"),
+  dataFile: document.getElementById("data-file"),
+  dataUpload: document.getElementById("data-upload"),
+  dataFileStatus: document.getElementById("data-file-status"),
 };
 
 /* Footer Suggestions per Mode */
@@ -97,13 +103,23 @@ const suggestionPresets = {
   ],
 
   local: [
-    { label: "Weather", value: "How’s the weather today in Darmstadt?" },
-    { label: "News", value: "Tell me the latest news about Frankfurt." },
-    { label: "Tourist Places", value: "Suggest me some tourist places in Munich." },
+    { label: "Weather", value: "How’s the weather today in Frankfurt?" },
+    { label: "News", value: "Tell me the latest news about Munich." },
+    { label: "Tourist Places", value: "Suggest me some tourist places in Berlin." },
     { label: "Supermarkets", value: "I want to buy groceries in Darmstadt." },
     { label: "Hotels", value: "Where can I stay overnight in Hamburg?" },
     { label: "Flights", value: "I want to travel New York." },
   ],
+
+  programming: [
+    { label:"Explain Python",  value:"Explain this Python function."},
+    { label:"Debug Code",  value:"Why does this code throw an exception?"},
+    { label:"Write Function",  value:"Write a Python function to generate fibonacci sequence."},
+    { label:"Convert Language", value:"Convert this C++ code into Python."},
+    { label:"Big-O", value:"Explain the time complexity of binary search."},
+    { label:"Improve Code", value:"Improve the readability of this code."}
+  ],
+    
 };
 
 /* Small UI Helpers */
@@ -127,26 +143,50 @@ function addBubble(role, text) {
 function updateSuggestionRow(mode) {
   if (!suggestionRow) return;
 
-  const chips = Array.from(suggestionRow.querySelectorAll(".chip"));
-  const preset = suggestionPresets[mode] || suggestionPresets.assistant;
+  const chips = Array.from(
+    suggestionRow.querySelectorAll(".chip")
+  );
+
+  let preset;
+
+  if (
+    mode === "data" &&
+    window.DataAnalysisMode
+  ) {
+    preset =
+      window.DataAnalysisMode.getSuggestions();
+  } else {
+    preset =
+      suggestionPresets[mode] ||
+      suggestionPresets.assistant;
+  }
 
   chips.forEach((chip, index) => {
     const item = preset[index];
+
     if (item) {
       chip.classList.remove("hidden");
       chip.textContent = item.label;
       chip.dataset.suggest = item.value;
     } else {
       chip.classList.add("hidden");
+      chip.textContent = "";
+      chip.dataset.suggest = "";
     }
   });
 }
 
 function setSliderLabels() {
-  if (el.tempVal) el.tempVal.textContent = Number(el.temp.value).toFixed(2);
-  if (el.topPVal) el.topPVal.textContent = Number(el.topP.value).toFixed(2);
-}
+  if (el.temp && el.tempVal) {
+    el.tempVal.textContent =
+      Number(el.temp.value).toFixed(2);
+  }
 
+  if (el.topP && el.topPVal) {
+    el.topPVal.textContent =
+      Number(el.topP.value).toFixed(2);
+  }
+}
 function autoGrowTextarea() {
   el.input.style.height = "auto";
   el.input.style.height = Math.min(el.input.scrollHeight, 90) + "px";
@@ -186,17 +226,31 @@ function setProcessingState(processing) {
     el.sendBtn.disabled = processing;
 
     if (processing) {
-      el.sendBtn.innerHTML = '<div class="square-spinner"></div>';
+      el.sendBtn.innerHTML =
+        '<div class="square-spinner"></div>';
     } else {
       el.sendBtn.textContent = "➤";
     }
 
-    el.sendBtn.style.opacity = processing ? "0.9" : "1";
-    el.sendBtn.style.cursor = processing ? "not-allowed" : "pointer";
+    el.sendBtn.style.opacity =
+      processing ? "0.9" : "1";
+
+    el.sendBtn.style.cursor =
+      processing
+        ? "not-allowed"
+        : "pointer";
   }
 
   if (el.input) {
     el.input.disabled = processing;
+  }
+
+  if (el.dataUpload) {
+    el.dataUpload.disabled = processing;
+  }
+
+  if (el.dataFile) {
+    el.dataFile.disabled = processing;
   }
 }
 
@@ -234,10 +288,11 @@ function closeDialog() {
 
 /* Mode UI Switching */
 function applyModeUI(mode) {
-  document.body.classList.remove("math-mode", "translate-mode", "local-mode");
+  document.body.classList.remove("math-mode", "programming-mode", "data-mode", "translate-mode", "local-mode");
 
   if (el.translateControls) el.translateControls.classList.add("hidden");
   if (el.localControls) el.localControls.classList.add("hidden");
+  if (window.DataAnalysisMode) window.DataAnalysisMode.hideModeUI();
   if (el.confirmSettings) el.confirmSettings.classList.remove("hidden");
   if (el.modelGroup) el.modelGroup.classList.remove("hidden");
   if (el.slidersGroup) el.slidersGroup.classList.remove("hidden");
@@ -247,11 +302,19 @@ function applyModeUI(mode) {
 
   if (mode === "assistant") {
     if (settingsRow) settingsRow.classList.remove("hidden");
-    if (modeSubtitle) modeSubtitle.textContent = "Normal Assistant · Ask anything";
+    if (modeSubtitle) modeSubtitle.textContent = "Normal Chatbot · Ask anything";
   } else if (mode === "math") {
     if (settingsRow) settingsRow.classList.remove("hidden");
     document.body.classList.add("math-mode");
-    if (modeSubtitle) modeSubtitle.textContent = "Math Mode · Solve Math Problems";
+    if (modeSubtitle) modeSubtitle.textContent = "Math Mode · Solve Your Math Problems";
+  } else if (mode === "programming") { 
+    if (settingsRow) settingsRow.classList.remove("hidden"); 
+    document.body.classList.add("programming-mode"); 
+    if (modeSubtitle) modeSubtitle.textContent = "Code Assistant · Explain, Debug and Write Code";
+  } else if (mode === "data") {
+    if (window.DataAnalysisMode) {
+      window.DataAnalysisMode.showModeUI();
+    }
   } else if (mode === "translate") {
     if (settingsRow) settingsRow.classList.remove("hidden");
     document.body.classList.add("translate-mode");
@@ -290,6 +353,24 @@ async function sendMessage(text) {
 
   if (currentMode === "math") {
     endpoint = "/api/math";
+  } else if (currentMode === "programming") { 
+    endpoint = "/api/programming";
+    payload = {
+      prompt: cleanText,
+    };
+
+  } else if (
+    currentMode === "data" &&
+    window.DataAnalysisMode
+  ) {
+    const request =
+      window.DataAnalysisMode.getRequest(
+        cleanText
+      );
+
+    endpoint = request.endpoint;
+    payload = request.payload;  
+
   } else if (currentMode === "translate") {
     endpoint = "/api/translate";
     payload = {
@@ -381,6 +462,20 @@ el.dialogSkip.addEventListener("click", async () => {
         "assistant",
         "Chat history is too large. This response was skipped. Please clear or truncate your history."
       );
+    } else if (currentMode === "programming") { 
+      closeDialog(); 
+      addBubble( 
+        "assistant", 
+        "The programming request and history are too large. Please shorten the code or clear the history." );
+
+    } else if (currentMode === "data") {
+      closeDialog();
+      addBubble(
+        "assistant",
+        "The dataset summary and conversation are too large. " +
+        "Please clear the mode or upload a dataset with fewer columns."
+      );
+
     } else if (currentMode === "translate") {
       closeDialog();
       addBubble(
@@ -412,6 +507,21 @@ el.dialogClear.addEventListener("click", async () => {
       closeDialog();
       el.chatLog.innerHTML = "";
       addBubble("assistant", "Math history cleared. Please ask your question again.");
+    } else if (currentMode === "programming") { 
+      await postJSON("/api/clear_mode", { mode: "programming" }); 
+      closeDialog(); 
+      el.chatLog.innerHTML = ""; 
+      addBubble("assistant", "Programming history cleared. Please enter your request again.");
+    } else if (currentMode === "data") {
+      await postJSON("/api/clear_mode", {mode: "data"});
+      closeDialog();
+      el.chatLog.innerHTML = "";
+      window.DataAnalysisMode?.clearDatasetUI();
+      addBubble(
+        "assistant",
+        "Data Analysis history and dataset cleared. " +
+        "Please upload the dataset again."
+      );
     } else if (currentMode === "translate") {
       await postJSON("/api/clear_mode", { mode: "translate" });
       closeDialog();
@@ -430,19 +540,72 @@ el.dialogClear.addEventListener("click", async () => {
 });
 
 /* Main Buttons */
-el.clearHistory.addEventListener("click", async () => {
-  if (currentMode === "assistant") {
-    await postJSON("/api/clear", {});
-  } else if (currentMode === "math") {
-    await postJSON("/api/clear_mode", { mode: "math" });
-  } else if (currentMode === "translate") {
-    await postJSON("/api/clear_mode", { mode: "translate" });
-  } else if (currentMode === "local") {
-    await postJSON("/api/clear_mode", { mode: "local" });
-  }
+el.clearHistory.addEventListener(
+  "click",
+  async () => {
+    if (isProcessing) {
+      return;
+    }
 
-  el.chatLog.innerHTML = "";
-});
+    try {
+      if (currentMode === "assistant") {
+        await postJSON(
+          "/api/clear",
+          {}
+        );
+      } else if (currentMode === "math") {
+        await postJSON(
+          "/api/clear_mode",
+          {
+            mode: "math",
+          }
+        );
+      } else if (
+        currentMode === "programming"
+      ) {
+        await postJSON(
+          "/api/clear_mode",
+          {
+            mode: "programming",
+          }
+        );
+      } else if (currentMode === "data") {
+        await postJSON(
+          "/api/clear_mode",
+          {
+            mode: "data",
+          }
+        );
+
+        window.DataAnalysisMode
+          ?.clearDatasetUI();
+      } else if (
+        currentMode === "translate"
+      ) {
+        await postJSON(
+          "/api/clear_mode",
+          {
+            mode: "translate",
+          }
+        );
+      } else if (currentMode === "local") {
+        await postJSON(
+          "/api/clear_mode",
+          {
+            mode: "local",
+          }
+        );
+      }
+
+      el.chatLog.innerHTML = "";
+    } catch (error) {
+      addBubble(
+        "assistant",
+        `Could not clear the mode: ${error.message}`
+      );
+    }
+  }
+);
 
 el.confirmSettings.addEventListener("click", async () => {
   if (currentMode !== "assistant") return;
@@ -532,20 +695,27 @@ el.input.addEventListener("input", () => {
 });
 
 modeTabs.forEach((tab) => {
-  tab.addEventListener("click", async () => {
+  tab.addEventListener("click", () => {
     const mode = tab.dataset.mode;
-    if (!mode || tab.disabled) return;
 
-    currentMode = mode;
-    modeTabs.forEach((t) => t.classList.toggle("active", t === tab));
-    applyModeUI(mode);
-
-    try {
-      await postJSON("/api/clear_mode", { mode });
-    } catch (err) {
-      console.error("Failed to clear mode history:", err);
+    if (
+      !mode ||
+      tab.disabled ||
+      mode === currentMode
+    ) {
+      return;
     }
 
+    currentMode = mode;
+
+    modeTabs.forEach((item) => {
+      item.classList.toggle(
+        "active",
+        item === tab
+      );
+    });
+
+    applyModeUI(mode);
     el.chatLog.innerHTML = "";
   });
 });
@@ -571,6 +741,34 @@ async function refreshSystemUsage() {
     console.error("System usage update failed:", err);
   }
 }
+
+if (window.DataAnalysisMode) {
+  window.DataAnalysisMode.initialize({
+    elements: {
+      dataControls: el.dataControls,
+      dataFile: el.dataFile,
+      dataUpload: el.dataUpload,
+      dataFileStatus: el.dataFileStatus,
+      chatLog: el.chatLog,
+      settingsRow,
+      modeSubtitle,
+    },
+
+    helpers: {
+      addBubble,
+      setProcessingState,
+
+      getCurrentMode() {
+        return currentMode;
+      },
+
+      isProcessing() {
+        return isProcessing;
+      },
+    },
+  });
+}
+
 
 setSliderLabels();
 autoGrowTextarea();
