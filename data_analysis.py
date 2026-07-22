@@ -6,12 +6,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from werkzeug.datastructures import FileStorage
 
-from multi_modes import (
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_P,
-    HARD_PROMPT_CAP,
-    _llm_chat_mode,
-)
+from multi_modes import DEFAULT_TEMPERATURE, DEFAULT_TOP_P, HARD_PROMPT_CAP, _llm_chat_mode
 
 
 DATA_ANALYSIS_PROMPT_BUDGET = max( 800, HARD_PROMPT_CAP - 500)
@@ -29,7 +24,7 @@ MAX_CATEGORICAL_COLUMNS = 6
 DATA_ANALYSIS_SYSTEM_PROMPT = """
 You are a careful and practical data analysis assistant.
 
-The application provides a summary calculated with pandas.
+The application provides a structured summary of the uploaded dataset.
 
 Your responsibilities:
 - Explain the dataset structure.
@@ -52,24 +47,14 @@ Rules:
 """.strip()
 
 
+# Return a lowercase file extension
 def get_file_extension(filename: str) -> str:
-    """
-    Return a lowercase file extension, including the leading dot.
-
-    Example:
-        sales.csv -> .csv
-    """
 
     return os.path.splitext(filename or "")[1].lower()
 
 
+# Validate uploaded file
 def validate_uploaded_file(uploaded_file: Optional[FileStorage]) -> None:
-    """
-    Validate that an uploaded file exists and uses a supported extension.
-
-    Raises:
-        ValueError: If the file is missing or unsupported.
-    """
 
     if uploaded_file is None:
         raise ValueError("No dataset file was uploaded.")
@@ -87,12 +72,8 @@ def validate_uploaded_file(uploaded_file: Optional[FileStorage]) -> None:
         )
 
 
+# Load CSV or Excel file into a pandas DataFrame
 def load_dataset(uploaded_file: FileStorage) -> pd.DataFrame:
-    """
-    Load a CSV or Excel file into a pandas DataFrame.
-
-    The uploaded file is read directly from memory and is not saved permanently.
-    """
 
     validate_uploaded_file(uploaded_file)
 
@@ -128,7 +109,7 @@ def load_dataset(uploaded_file: FileStorage) -> pd.DataFrame:
             f"The maximum supported size is {MAX_DATASET_ROWS:,} rows."
         )
 
-    # Make all column names safe and readable.
+    # To ensure all column names safe and readable.
     dataframe.columns = [
         str(column).strip() or f"column_{index + 1}"
         for index, column in enumerate(dataframe.columns)
@@ -137,10 +118,8 @@ def load_dataset(uploaded_file: FileStorage) -> pd.DataFrame:
     return dataframe
 
 
+# Read csv files
 def _read_csv(uploaded_file: FileStorage) -> pd.DataFrame:
-    """
-    Read a CSV using a few common encodings.
-    """
 
     encodings = ["utf-8", "utf-8-sig", "latin-1"]
     last_error: Optional[Exception] = None
@@ -163,13 +142,8 @@ def _read_csv(uploaded_file: FileStorage) -> pd.DataFrame:
     ) from last_error
 
 
-def dataframe_metadata(
-    dataframe: pd.DataFrame,
-    filename: str,
-) -> Dict[str, Any]:
-    """
-    Return frontend-friendly dataset metadata.
-    """
+# Return frontend-friendly dataset metadata.
+def dataframe_metadata( dataframe: pd.DataFrame, filename: str) -> Dict[str, Any]:
 
     return {
         "filename": filename,
@@ -181,17 +155,8 @@ def dataframe_metadata(
     }
 
 
-def build_dataset_context(
-    dataframe: pd.DataFrame,
-    filename: str,
-) -> str:
-    """
-    Build a compact, deterministic summary for the local LLM.
-
-    pandas performs the calculations. The LLM only explains the resulting
-    summary.
-    """
-
+# Build a compact, deterministic summary for the local LLM. Pandas performs the calculations and the LLM only explains the resulting summary
+def build_dataset_context( dataframe: pd.DataFrame, filename: str) -> str:
     sections: List[str] = []
 
     sections.append(
@@ -256,13 +221,9 @@ def build_dataset_context(
     return context
 
 
+# Return data types and non-null counts for every column.
 def build_column_information(dataframe: pd.DataFrame) -> str:
-    """
-    Return data types and non-null counts for every column.
-    """
-
     lines: List[str] = []
-
     total_rows = len(dataframe)
 
     for column in dataframe.columns:
@@ -279,13 +240,8 @@ def build_column_information(dataframe: pd.DataFrame) -> str:
     return "\n".join(lines)
 
 
-def build_missing_values_summary(
-    dataframe: pd.DataFrame,
-) -> str:
-    """
-    Return missing counts and percentages.
-    """
-
+# Return missing counts and percentages.
+def build_missing_values_summary( dataframe: pd.DataFrame, ) -> str:
     total_rows = len(dataframe)
     lines: List[str] = []
 
@@ -308,16 +264,9 @@ def build_missing_values_summary(
     return "\n".join(lines)
 
 
-def build_numeric_summary(
-    dataframe: pd.DataFrame,
-) -> str:
-    """
-    Calculate descriptive statistics for numeric columns.
-    """
-
-    numeric_dataframe = dataframe.select_dtypes(
-        include="number"
-    )
+# Calculate descriptive statistics for numeric columns.
+def build_numeric_summary( dataframe: pd.DataFrame) -> str:
+    numeric_dataframe = dataframe.select_dtypes( include="number")
 
     if numeric_dataframe.empty:
         return ""
@@ -340,13 +289,8 @@ def build_numeric_summary(
     return summary.round(4).to_string()
 
 
-def build_categorical_summary(
-    dataframe: pd.DataFrame,
-) -> str:
-    """
-    Show frequent values for a limited number of
-    categorical columns.
-    """
+# Show frequent values for a limited number of categorical columns.
+def build_categorical_summary( dataframe: pd.DataFrame, ) -> str:
 
     categorical_dataframe = dataframe.select_dtypes(
         include=[
@@ -408,18 +352,9 @@ def build_categorical_summary(
     return "\n\n".join(sections)
 
 
-def build_correlation_summary(
-    dataframe: pd.DataFrame,
-) -> str:
-    """
-    Return the strongest unique Pearson correlations.
-
-    Self-correlations and duplicate pairs are removed.
-    """
-
-    numeric_dataframe = dataframe.select_dtypes(
-        include="number"
-    )
+# Return the strongest unique Pearson correlations. Self-correlations and duplicate pairs are removed.
+def build_correlation_summary( dataframe: pd.DataFrame, ) -> str:
+    numeric_dataframe = dataframe.select_dtypes(include="number"    )
 
     if numeric_dataframe.shape[1] < 2:
         return ""
@@ -483,22 +418,10 @@ def build_correlation_summary(
     )
 
 
-def make_upload_reply(
-    dataframe: pd.DataFrame,
-    filename: str,
-) -> str:
-    """
-    Create the initial response displayed after an upload.
-    """
-
-    numeric_count = dataframe.select_dtypes(
-        include="number"
-    ).shape[1]
-
-    categorical_count = dataframe.select_dtypes(
-        include=["object", "string", "category", "bool"]
-    ).shape[1]
-
+# Display an initial response after an upload.
+def make_upload_reply( dataframe: pd.DataFrame, filename: str, ) -> str:
+    numeric_count = dataframe.select_dtypes(include="number").shape[1]
+    categorical_count = dataframe.select_dtypes(include=["object", "string", "category", "bool"]).shape[1]
     missing_count = int(dataframe.isna().sum().sum())
     duplicate_count = int(dataframe.duplicated().sum())
 
@@ -511,12 +434,13 @@ def make_upload_reply(
         f"Text/categorical columns: {categorical_count}\n"
         f"Missing cells: {missing_count:,}\n"
         f"Duplicate rows: {duplicate_count:,}\n\n"
-        "You can now ask me to summarize the dataset, explain "
+        "You can now ask the model to summarize the dataset, explain "
         "missing values, inspect numerical statistics, compare "
-        "columns, or identify possible data-quality issues."
+        "columns or identify possible data-quality issues."
     )
 
 
+# Data Analysis Mode section. Generate a natural-language explanation of the pandas dataset summary.
 def data_analysis_chat(
     model,
     tokenizer,
@@ -528,9 +452,6 @@ def data_analysis_chat(
     top_p: float = DEFAULT_TOP_P,
     max_new_tokens: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """
-    Generate a natural-language explanation of the pandas dataset summary.
-    """
 
     safe_history = list(history) if history else []
     cleaned_input = (user_input or "").strip()
@@ -555,10 +476,7 @@ def data_analysis_chat(
             "reason": "no_dataset",
         }
 
-    dataset_token_budget = max(
-        700,
-        HARD_PROMPT_CAP - 700,
-    )
+    dataset_token_budget = max( 700, HARD_PROMPT_CAP - 700)
 
     cleaned_context = trim_context_to_token_budget(
         context=cleaned_context,
@@ -568,13 +486,13 @@ def data_analysis_chat(
 
 
     model_input = (
-        "PANDAS DATASET SUMMARY\n"
-        "======================\n"
+        "DATASET SUMMARY\n"
+        "===============\n"
         f"{cleaned_context}\n\n"
         "USER QUESTION\n"
         "=============\n"
         f"{cleaned_input}\n\n"
-        "Answer only from the supplied pandas summary."
+        "Answer only from the supplied dataset information."
     )
 
     return _llm_chat_mode(
@@ -594,15 +512,8 @@ def data_analysis_chat(
     )
 
 
-def trim_context_to_token_budget(
-    context: str,
-    tokenizer,
-    max_tokens: int,
-) -> str:
-    """
-    Truncate dataset context using the model tokenizer.
-    """
-
+#  Truncate dataset context using the model tokenizer.
+def trim_context_to_token_budget( context: str, tokenizer, max_tokens: int, ) -> str:
     encoded = tokenizer(
         context,
         add_special_tokens=False,
