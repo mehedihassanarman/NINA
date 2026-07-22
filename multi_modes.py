@@ -86,6 +86,29 @@ def get_local_guide_system_prompt(city: Optional[str] = None) -> str:
         "If the user needs exact or live information, tell them to check a dedicated website or app.\n"
     ) + extra
 
+def get_programming_system_prompt():
+
+    return (
+        "You are an expert programming assistant.\n"
+
+        "You help users:\n"
+
+        "- explain code\n"
+        "- debug code\n"
+        "- write functions\n"
+        "- improve readability\n"
+        "- convert between programming languages\n"
+        "- explain algorithms\n"
+        "- analyze time and memory complexity\n"
+
+        "Always:\n"
+
+        "- explain step by step\n"
+        "- use markdown code blocks\n"
+        "- never invent program output\n"
+        "- if context is missing, ask for it\n"
+        "- keep explanations concise\n"
+    )
 
 # Load device and model
 def get_device() -> str:
@@ -873,3 +896,32 @@ def guide_mode( model, tokenizer, device: str, history: Optional[List[str]], use
     llm_result["intent"] = intent
 
     return llm_result
+
+# Programming Assistant Mode section
+def programming_mode( model, tokenizer, device, history, user_input, temperature=DEFAULT_TEMPERATURE, top_p=DEFAULT_TOP_P, max_new_tokens=None, ):
+
+    history = list(history) if history else []
+
+    user_input = (user_input or "").strip()
+
+    if not user_input:
+        return {
+            "reply": "",
+            "history": history,
+            "skipped": True,
+            "reason": "empty_input",
+        }
+
+    return _llm_chat_mode(
+        mode_name="programming",
+        model=model,
+        tokenizer=tokenizer,
+        device=device,
+        history=history,
+        system_prompt=get_programming_system_prompt(),
+        user_input_for_prompt=user_input,
+        raw_user_text_for_history=user_input,
+        temperature=temperature,
+        top_p=top_p,
+        max_new_tokens=max_new_tokens,
+    )
