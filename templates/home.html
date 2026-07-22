@@ -30,6 +30,8 @@
         <button class="mode-tab" data-mode="math">Math</button>
         <button class="mode-tab" data-mode="translate">Translate</button>
         <button class="mode-tab" data-mode="local">Local Guide</button>
+        <button class="mode-tab" data-mode="programming">Code</button>
+        <button class="mode-tab" data-mode="data">Data Analysis</button>
       </nav>
 
       <!-- Settings Panel -->
@@ -165,7 +167,34 @@
 
               <button type="button" class="swap-button" id="local-search-flight"> Search Flights </button>
             </div>
+            <!-- Data Analysis Controls -->
+            <div class="data-controls hidden" id="data-controls">
+              <div class="settings-label">Dataset</div>
+
+              <input
+                type="file"
+                id="data-file"
+                accept=".csv,.xlsx,.xls"
+              />
+
+              <button
+                type="button"
+                class="swap-button"
+                id="data-upload"
+              >
+                Load Dataset
+              </button>
+
+              <div
+                class="data-file-status"
+                id="data-file-status"
+              >
+                No dataset loaded
+              </div>
+            </div>
+
           </div>
+
 
           <!-- Action Buttons -->
           <div class="settings-group" id="actions-group">
@@ -227,6 +256,7 @@
       supported_languages: {{ supported_languages|tojson }}
     };
   </script>
+  <script src="{{ url_for('static', filename='js/data_analysis.js') }}" ></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
