@@ -1,10 +1,12 @@
 (function () {
   "use strict";
 
+  /* Module state */
   let initialized = false;
   let elements = null;
   let helpers = null;
 
+  /* Initialize the Data Analysis module */
   function initialize(options) {
     if (initialized) {
       return;
@@ -14,10 +16,7 @@
     helpers = options?.helpers;
 
     if (!elements?.dataUpload) {
-      console.error(
-        "Missing Data Analysis upload button."
-      );
-
+      console.error("Missing Data Analysis upload button." );
       return;
     }
 
@@ -34,21 +33,15 @@
     );
 
     if (missingHelper) {
-      console.error(
-        `Missing Data Analysis helper: ${missingHelper}`
-      );
-
+      console.error(`Missing Data Analysis helper: ${missingHelper}`);
       return;
     }
 
-    elements.dataUpload.addEventListener(
-      "click",
-      uploadDataset
-    );
-
+    elements.dataUpload.addEventListener("click",uploadDataset);
     initialized = true;
   }
 
+  /* Upload a CSV or Excel dataset to the backend */
   async function uploadDataset() {
     if (helpers.getCurrentMode() !== "data") {
       return;
@@ -85,9 +78,7 @@
     formData.append("file", file);
 
     try {
-      const response = await fetch(
-        "/api/data/upload",
-        {
+      const response = await fetch("/api/data/upload", {
           method: "POST",
           body: formData,
         }
@@ -97,15 +88,12 @@
 
       if (!response.ok || !result.ok) {
         throw new Error(
-          result.error ||
-          `Upload failed with HTTP ${response.status}.`
+          result.error || `Upload failed with HTTP ${response.status}.`
         );
       }
 
       updateFileStatus(
-        `${result.filename} · ` +
-        `${result.rows} rows · ` +
-        `${result.columns} columns`
+        `${result.filename} · ${result.rows} rows · ${result.columns} columns`
       );
 
       if (elements.chatLog) {
@@ -113,14 +101,11 @@
       }
       helpers.addBubble(
         "assistant",
-        result.reply ||
-          "Dataset loaded successfully."
+        result.reply || "Dataset loaded successfully."
       );
 
     } catch (error) {
-      updateFileStatus(
-        "Dataset loading failed"
-      );
+      updateFileStatus("Dataset loading failed");
 
       helpers.addBubble(
         "assistant",
@@ -131,37 +116,34 @@
     }
   }
 
+   /* Check whether the selected file extension is supported */
   function isSupportedFile(filename) {
-    const normalizedFilename =
-      String(filename || "").toLowerCase();
+    const normalizedFilename = String(filename || "").toLowerCase();
 
-    return [
-      ".csv",
-      ".xlsx",
-      ".xls",
-    ].some(
-      (extension) =>
+    return [".csv", ".xlsx", ".xls"].some((extension) =>
         normalizedFilename.endsWith(extension)
     );
   }
 
+  /* Read the JSON response returned by the server */
   async function readJsonResponse(response) {
     try {
       return await response.json();
     } catch {
       throw new Error(
-        `The server returned HTTP ${response.status} ` +
-        "without a valid JSON response."
+        `The server returned HTTP ${response.status} without a valid JSON response.`
       );
     }
   }
 
+  /* Update the dataset status displayed in the interface */
   function updateFileStatus(message) {
     if (elements.dataFileStatus) {
       elements.dataFileStatus.textContent = message;
     }
   }
 
+  /* Clear the selected dataset and reset the status label */
   function clearDatasetUI() {
     if (elements.dataFile) {
       elements.dataFile.value = "";
@@ -170,19 +152,16 @@
     updateFileStatus("No dataset loaded");
   }
 
+   /* Show controls specific to Data Analysis mode */
   function showModeUI() {
     document.body.classList.add("data-mode");
 
     if (elements.settingsRow) {
-      elements.settingsRow.classList.remove(
-        "hidden"
-      );
+      elements.settingsRow.classList.remove("hidden");
     }
 
     if (elements.dataControls) {
-      elements.dataControls.classList.remove(
-        "hidden"
-      );
+      elements.dataControls.classList.remove("hidden");
     }
 
     if (elements.modeSubtitle) {
@@ -191,16 +170,16 @@
     }
   }
 
+  /* Hide controls when leaving Data Analysis mode */
   function hideModeUI() {
     document.body.classList.remove("data-mode");
 
     if (elements.dataControls) {
-      elements.dataControls.classList.add(
-        "hidden"
-      );
+      elements.dataControls.classList.add("hidden");
     }
   }
 
+  /* Return the predefined suggestion prompts */
   function getSuggestions() {
     return [
       {
@@ -234,6 +213,7 @@
     ];
   }
 
+  /* Build the request payload for the backend */
   function getRequest(text) {
     return {
       endpoint: "/api/data",

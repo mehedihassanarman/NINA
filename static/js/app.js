@@ -112,14 +112,14 @@ const suggestionPresets = {
   ],
 
   programming: [
-    { label:"Explain Python",  value:"Explain this Python function."},
-    { label:"Debug Code",  value:"Why does this code throw an exception?"},
-    { label:"Write Function",  value:"Write a Python function to generate fibonacci sequence."},
-    { label:"Convert Language", value:"Convert this C++ code into Python."},
-    { label:"Big-O", value:"Explain the time complexity of binary search."},
-    { label:"Improve Code", value:"Improve the readability of this code."}
+    { label: "Explain Python", value: "Explain this Python function." },
+    { label: "Debug Code", value: "Why does this code throw an exception?" },
+    { label: "Write Function", value: "Write a Python function to generate fibonacci sequence." },
+    { label: "Convert Language", value: "Convert this C++ code into Python." },
+    { label: "Big-O", value: "Explain the time complexity of binary search." },
+    { label: "Improve Code", value: "Improve the readability of this code." }
   ],
-    
+
 };
 
 /* Small UI Helpers */
@@ -143,22 +143,14 @@ function addBubble(role, text) {
 function updateSuggestionRow(mode) {
   if (!suggestionRow) return;
 
-  const chips = Array.from(
-    suggestionRow.querySelectorAll(".chip")
-  );
+  const chips = Array.from(suggestionRow.querySelectorAll(".chip")  );
 
   let preset;
 
-  if (
-    mode === "data" &&
-    window.DataAnalysisMode
-  ) {
-    preset =
-      window.DataAnalysisMode.getSuggestions();
+  if (mode === "data" &&  window.DataAnalysisMode ) {
+    preset = window.DataAnalysisMode.getSuggestions();
   } else {
-    preset =
-      suggestionPresets[mode] ||
-      suggestionPresets.assistant;
+    preset = suggestionPresets[mode] || suggestionPresets.assistant;
   }
 
   chips.forEach((chip, index) => {
@@ -178,15 +170,14 @@ function updateSuggestionRow(mode) {
 
 function setSliderLabels() {
   if (el.temp && el.tempVal) {
-    el.tempVal.textContent =
-      Number(el.temp.value).toFixed(2);
+    el.tempVal.textContent = Number(el.temp.value).toFixed(2);
   }
 
   if (el.topP && el.topPVal) {
-    el.topPVal.textContent =
-      Number(el.topP.value).toFixed(2);
+    el.topPVal.textContent = Number(el.topP.value).toFixed(2);
   }
 }
+
 function autoGrowTextarea() {
   el.input.style.height = "auto";
   el.input.style.height = Math.min(el.input.scrollHeight, 90) + "px";
@@ -226,8 +217,7 @@ function setProcessingState(processing) {
     el.sendBtn.disabled = processing;
 
     if (processing) {
-      el.sendBtn.innerHTML =
-        '<div class="square-spinner"></div>';
+      el.sendBtn.innerHTML = '<div class="square-spinner"></div>';
     } else {
       el.sendBtn.textContent = "➤";
     }
@@ -302,14 +292,14 @@ function applyModeUI(mode) {
 
   if (mode === "assistant") {
     if (settingsRow) settingsRow.classList.remove("hidden");
-    if (modeSubtitle) modeSubtitle.textContent = "Normal Chatbot · Ask anything";
+    if (modeSubtitle) modeSubtitle.textContent = "Normal ChatBot · Ask anything";
   } else if (mode === "math") {
     if (settingsRow) settingsRow.classList.remove("hidden");
     document.body.classList.add("math-mode");
     if (modeSubtitle) modeSubtitle.textContent = "Math Mode · Solve Your Math Problems";
-  } else if (mode === "programming") { 
-    if (settingsRow) settingsRow.classList.remove("hidden"); 
-    document.body.classList.add("programming-mode"); 
+  } else if (mode === "programming") {
+    if (settingsRow) settingsRow.classList.remove("hidden");
+    document.body.classList.add("programming-mode");
     if (modeSubtitle) modeSubtitle.textContent = "Code Assistant · Explain, Debug and Write Code";
   } else if (mode === "data") {
     if (window.DataAnalysisMode) {
@@ -353,23 +343,17 @@ async function sendMessage(text) {
 
   if (currentMode === "math") {
     endpoint = "/api/math";
-  } else if (currentMode === "programming") { 
+  } else if (currentMode === "programming") {
     endpoint = "/api/programming";
-    payload = {
-      prompt: cleanText,
-    };
+    payload = {prompt: cleanText};
 
   } else if (
-    currentMode === "data" &&
-    window.DataAnalysisMode
-  ) {
+    currentMode === "data" && window.DataAnalysisMode) {
     const request =
-      window.DataAnalysisMode.getRequest(
-        cleanText
-      );
+      window.DataAnalysisMode.getRequest(cleanText);
 
     endpoint = request.endpoint;
-    payload = request.payload;  
+    payload = request.payload;
 
   } else if (currentMode === "translate") {
     endpoint = "/api/translate";
@@ -462,11 +446,11 @@ el.dialogSkip.addEventListener("click", async () => {
         "assistant",
         "Chat history is too large. This response was skipped. Please clear or truncate your history."
       );
-    } else if (currentMode === "programming") { 
-      closeDialog(); 
-      addBubble( 
-        "assistant", 
-        "The programming request and history are too large. Please shorten the code or clear the history." );
+    } else if (currentMode === "programming") {
+      closeDialog();
+      addBubble(
+        "assistant",
+        "The programming request and history are too large. Please shorten the code or clear the history.");
 
     } else if (currentMode === "data") {
       closeDialog();
@@ -507,13 +491,13 @@ el.dialogClear.addEventListener("click", async () => {
       closeDialog();
       el.chatLog.innerHTML = "";
       addBubble("assistant", "Math history cleared. Please ask your question again.");
-    } else if (currentMode === "programming") { 
-      await postJSON("/api/clear_mode", { mode: "programming" }); 
-      closeDialog(); 
-      el.chatLog.innerHTML = ""; 
+    } else if (currentMode === "programming") {
+      await postJSON("/api/clear_mode", { mode: "programming" });
+      closeDialog();
+      el.chatLog.innerHTML = "";
       addBubble("assistant", "Programming history cleared. Please enter your request again.");
     } else if (currentMode === "data") {
-      await postJSON("/api/clear_mode", {mode: "data"});
+      await postJSON("/api/clear_mode", { mode: "data" });
       closeDialog();
       el.chatLog.innerHTML = "";
       window.DataAnalysisMode?.clearDatasetUI();
@@ -539,73 +523,32 @@ el.dialogClear.addEventListener("click", async () => {
   }
 });
 
+
 /* Main Buttons */
-el.clearHistory.addEventListener(
-  "click",
-  async () => {
-    if (isProcessing) {
-      return;
+el.clearHistory.addEventListener("click", async () => {
+  if (isProcessing) return;
+
+  try {
+    if (currentMode === "assistant") {
+      await postJSON("/api/clear", {});
+    } else if (currentMode === "math") {
+      await postJSON("/api/clear_mode", { mode: "math" });
+    } else if (currentMode === "programming") {
+      await postJSON("/api/clear_mode", { mode: "programming" });
+    } else if (currentMode === "data") {
+      await postJSON("/api/clear_mode", { mode: "data" });
+      window.DataAnalysisMode?.clearDatasetUI();
+    } else if (currentMode === "translate") {
+      await postJSON("/api/clear_mode", { mode: "translate" });
+    } else if (currentMode === "local") {
+      await postJSON("/api/clear_mode", { mode: "local" });
     }
 
-    try {
-      if (currentMode === "assistant") {
-        await postJSON(
-          "/api/clear",
-          {}
-        );
-      } else if (currentMode === "math") {
-        await postJSON(
-          "/api/clear_mode",
-          {
-            mode: "math",
-          }
-        );
-      } else if (
-        currentMode === "programming"
-      ) {
-        await postJSON(
-          "/api/clear_mode",
-          {
-            mode: "programming",
-          }
-        );
-      } else if (currentMode === "data") {
-        await postJSON(
-          "/api/clear_mode",
-          {
-            mode: "data",
-          }
-        );
-
-        window.DataAnalysisMode
-          ?.clearDatasetUI();
-      } else if (
-        currentMode === "translate"
-      ) {
-        await postJSON(
-          "/api/clear_mode",
-          {
-            mode: "translate",
-          }
-        );
-      } else if (currentMode === "local") {
-        await postJSON(
-          "/api/clear_mode",
-          {
-            mode: "local",
-          }
-        );
-      }
-
-      el.chatLog.innerHTML = "";
-    } catch (error) {
-      addBubble(
-        "assistant",
-        `Could not clear the mode: ${error.message}`
-      );
-    }
+    el.chatLog.innerHTML = "";
+  } catch (error) {
+    addBubble("assistant", `Could not clear the mode: ${error.message}`);
   }
-);
+});
 
 el.confirmSettings.addEventListener("click", async () => {
   if (currentMode !== "assistant") return;
@@ -698,21 +641,14 @@ modeTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     const mode = tab.dataset.mode;
 
-    if (
-      !mode ||
-      tab.disabled ||
-      mode === currentMode
-    ) {
+    if (!mode || tab.disabled || mode === currentMode) {
       return;
     }
 
     currentMode = mode;
 
     modeTabs.forEach((item) => {
-      item.classList.toggle(
-        "active",
-        item === tab
-      );
+      item.classList.toggle("active", item === tab);
     });
 
     applyModeUI(mode);
