@@ -898,10 +898,8 @@ def guide_mode( model, tokenizer, device: str, history: Optional[List[str]], use
     return llm_result
 
 # Programming Assistant Mode section
-def programming_mode( model, tokenizer, device, history, user_input, temperature=DEFAULT_TEMPERATURE, top_p=DEFAULT_TOP_P, max_new_tokens=None, ):
-
+def programming_mode( model, tokenizer, device, history, user_input, temperature=DEFAULT_TEMPERATURE, top_p=DEFAULT_TOP_P, max_new_tokens=None):
     history = list(history) if history else []
-
     user_input = (user_input or "").strip()
 
     if not user_input:
