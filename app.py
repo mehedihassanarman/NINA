@@ -56,7 +56,7 @@ def get_sid() -> str:
             "translate_history": [],    # translator mode history
             "guide_history": [],        # local guide mode history
             "programming_history": [],  # programming mode history
-            "data_history": [],
+            "data_history": [],         # data analysis mode history
             "data_context": None,
             "data_filename": None,
             "guide_current_city": None,
@@ -147,11 +147,9 @@ def get_programming_history():
     state = get_state()
     return state.get("programming_history", [])
 
-
 def set_programming_history(history):
     state = get_state()
     state["programming_history"] = history
-
 
 def clear_programming_history():
     state = get_state()
@@ -163,31 +161,25 @@ def get_data_history() -> list[str]:
     state = get_state()
     return state.get("data_history", [])
 
-
 def set_data_history(history: list[str]) -> None:
     state = get_state()
     state["data_history"] = history
-
 
 def get_data_context() -> Optional[str]:
     state = get_state()
     return state.get("data_context")
 
-
 def set_data_context(context: Optional[str]) -> None:
     state = get_state()
     state["data_context"] = context
-
 
 def get_data_filename() -> Optional[str]:
     state = get_state()
     return state.get("data_filename")
 
-
 def set_data_filename(filename: Optional[str]) -> None:
     state = get_state()
     state["data_filename"] = filename
-
 
 def clear_data_analysis() -> None:
     state = get_state()
@@ -253,7 +245,7 @@ def get_loaded_model(model_key: str, device_pref: str):
     return cached["model"], cached["tokenizer"], cached["device"]
 
 
-# Load a separate model for Math mode
+# Load a single model for Math mode, Translation mode, local guide mode, programming mode, data analysis mode
 MATH_MODEL = None
 MATH_TOKENIZER = None
 MATH_DEVICE = None
@@ -266,30 +258,12 @@ def get_math_model():
     return MATH_MODEL, MATH_TOKENIZER, MATH_DEVICE
 
 
-# Load a separate model for Translator mode
-TRANSLATE_MODEL = None
-TRANSLATE_TOKENIZER = None
-TRANSLATE_DEVICE = None
-
 def get_translate_model():
-    global TRANSLATE_MODEL, TRANSLATE_TOKENIZER, TRANSLATE_DEVICE
-    if TRANSLATE_MODEL is None or TRANSLATE_TOKENIZER is None or TRANSLATE_DEVICE is None:
-        TRANSLATE_DEVICE = mm_get_device()
-        TRANSLATE_MODEL, TRANSLATE_TOKENIZER = mm_load_llama_model(TRANSLATE_DEVICE)
-    return TRANSLATE_MODEL, TRANSLATE_TOKENIZER, TRANSLATE_DEVICE
+    return get_math_model()
 
-
-# Load a separate model for Local Guide mode
-GUIDE_MODEL = None
-GUIDE_TOKENIZER = None
-GUIDE_DEVICE = None
 
 def get_guide_model():
-    global GUIDE_MODEL, GUIDE_TOKENIZER, GUIDE_DEVICE
-    if GUIDE_MODEL is None or GUIDE_TOKENIZER is None or GUIDE_DEVICE is None:
-        GUIDE_DEVICE = mm_get_device()
-        GUIDE_MODEL, GUIDE_TOKENIZER = mm_load_llama_model(GUIDE_DEVICE)
-    return GUIDE_MODEL, GUIDE_TOKENIZER, GUIDE_DEVICE
+    return get_math_model()
 
 
 def get_programming_model():
@@ -298,6 +272,7 @@ def get_programming_model():
 
 def get_data_model():
     return get_math_model()
+
 
 # Routes : System Usage
 @app.post("/api/system")
@@ -685,13 +660,9 @@ def api_flights():
 # Routes: Programming Assisteant Mode
 @app.post("/api/programming")
 def api_programming():
-
     data = request.get_json(force=True) or {}
-
     prompt = ( data.get("prompt") or data.get("message") or "" ).strip()
-
     model, tokenizer, device = get_programming_model()
-
     result = programming_mode(
         model=model,
         tokenizer=tokenizer,
@@ -699,7 +670,6 @@ def api_programming():
         history=get_programming_history(),
         user_input=prompt,
     )
-
     set_programming_history(result["history"])
 
     return jsonify(
@@ -710,14 +680,13 @@ def api_programming():
     )
 
 
-
+# Upload files for Data Analysis
 @app.post("/api/data/upload")
 def api_data_upload():
     uploaded_file = request.files.get("file")
 
     try:
         dataframe = load_dataset(uploaded_file)
-
         filename = (
             uploaded_file.filename
             if uploaded_file is not None
@@ -764,6 +733,7 @@ def api_data_upload():
         ), 500
 
 
+# Routes: Data Analysis Mode
 @app.post("/api/data")
 def api_data_analysis():
     data = request.get_json(force=True) or {}
