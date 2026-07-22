@@ -643,3 +643,118 @@ body.local-mode #assistant-clear-history {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+
+body.programming-mode #device-group .settings-label,
+body.programming-mode #device-group .radio-label {
+  display: none;
+}
+
+body.programming-mode #model-group,
+body.programming-mode #temp-group,
+body.programming-mode #topp-group,
+body.programming-mode #mid-group,
+body.programming-mode #assistant-confirm-settings {
+  display: none;
+}
+
+body.programming-mode #device-group {
+  padding-top: 8px;
+  margin-top: -10px;
+}
+
+body.programming-mode #device-group .system-usage {
+  width: 100%;
+}
+
+body.programming-mode #actions-group {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+
+/* Data Analysis controls are hidden outside Data mode */
+.data-controls {
+  display: none;
+}
+
+/* Data Analysis Mode — compact layout similar to Math mode */
+body.data-mode #device-group > .settings-label,
+body.data-mode #device-group > .radio-label,
+body.data-mode #model-group,
+body.data-mode #temp-group,
+body.data-mode #topp-group,
+body.data-mode #assistant-confirm-settings,
+body.data-mode #assistant-max-tokens,
+body.data-mode #assistant-seed,
+body.data-mode #mid-group > .settings-label {
+  display: none;
+}
+
+body.data-mode #device-group {
+  padding-top: 8px;
+  margin-top: -10px;
+}
+
+body.data-mode #device-group .system-usage {
+  width: 100%;
+}
+
+body.data-mode #mid-group {
+  margin-top: 0;
+}
+
+body.data-mode #data-controls {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.data-mode #data-file {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 11px;
+}
+
+body.data-mode #data-file::file-selector-button {
+  margin-right: 8px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #4f46e5;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+body.data-mode #data-upload {
+  width: 100%;
+  height: 32px;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+body.data-mode #data-upload:hover {
+  background: #6366f1;
+}
+
+.data-file-status {
+  max-width: 100%;
+  color: #93c5fd;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+body.data-mode #actions-group {
+  display: flex;
+  justify-content: flex-end;
+}
